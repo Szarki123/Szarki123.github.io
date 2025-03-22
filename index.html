@@ -13,10 +13,47 @@
             color: #333;
             text-align: center;
             line-height: 1.6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            position: relative;
+        }
+        /* Falling stars background */
+        .stars {
+            position: fixed; /* Stays fixed to the viewport */
+            top: -100%; /* Extended beyond viewport for seamless tiling */
+            left: -100%;
+            width: 300%; /* Larger than screen for infinite feel */
+            height: 300%;
+            background: transparent;
+            z-index: -1; /* Behind the content */
+            animation: fallStars 15s linear infinite; /* Diagonal fall */
+            transform: rotate(45deg); /* 45-degree tilt */
+        }
+        .stars::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle, rgba(255, 255, 255, 0.8) 2px, transparent 3px),
+                radial-gradient(circle, rgba(255, 255, 200, 0.6) 1px, transparent 2px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 2px);
+            background-size: 100px 100px, 150px 150px, 200px 200px; /* Star spacing */
+            background-position: 0 0, 30px 30px, 60px 60px; /* Offset layers */
+            background-repeat: repeat; /* Ensures tiling */
+            animation: twinkle 3s infinite; /* Subtle twinkling */
+        }
+        @keyframes fallStars {
+            0% {
+                transform: translate(-33%, -33%) rotate(45deg); /* Start off-screen */
+            }
+            100% {
+                transform: translate(33%, 33%) rotate(45deg); /* End off-screen */
+            }
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.9; }
         }
         h1 {
             font-size: 48px;
@@ -39,12 +76,16 @@
             padding: 25px;
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            max-width: 600px; /* Slightly wider for you! */
+            max-width: 600px;
             width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1; /* Above the stars */
         }
     </style>
 </head>
 <body>
+    <div class="stars"></div> <!-- Falling stars layer -->
     <div class="container">
         <h1>Welcome to Szarki’s About Me! ^w^</h1>
         <p>Hey there! I’m <span class="highlight">Szarki</span>, a shapeshifter! I can change my form and my sex (male, female, etc.)—pretty wild, huh? My mind stays mostly the same, but my shifts match my moods. In human years, I’m 21!</p>
@@ -52,7 +93,8 @@
         <p>I’m a proud <span class="highlight">genderfluid</span> trans person <span class="emoji">🏳️‍⚧️</span>, <span class="highlight">pansexual</span> <span class="emoji">🏳️‍🌈</span>, and a furry for 7+ years <span class="emoji">🐾</span>. These are huge parts of who I am, and I love it!</p>
         <p>I’m single and open for relationships!!! <span class="emoji">💖</span> Anyone who’s into me has to accept the whole Szarki package—shapeshifting and all. IRL, I look like a femboy, and I’m making myself pretty: nails, exercise, shaving, the works! Call me <span class="highlight">Dr. Szarki</span>, future dentist (half-joking, half-serious)!</p>
         <p>I’m a silly, cute, friendly soul—people call me a big cutie! I’m into lewd stuff, yiff, and roleplaying. I adore my friends and want them to be happy.</p>
-        <p>Feel free to hit me up on Discord That’s probably how you found this page. I’m a proud trans, pan, furry person, and I welcome everyone to my little world. <span class="emoji">🐾✨</span></p>
+        <p>Feel free to hit me up on Discord. That’s probably how you found this page. I’m a proud trans, pan, furry person, and I welcome everyone to my little world. <span class="emoji">🐾✨</span></p>
     </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9243ba2c5b717bba',t:'MTc0MjYyNTkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
