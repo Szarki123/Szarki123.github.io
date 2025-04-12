@@ -14,6 +14,7 @@
             text-align: center;
             line-height: 1.6;
             position: relative;
+            overflow-x: hidden; /* Prevent horizontal scrollbar potentially caused by wide background */
         }
         /* Falling stars background */
         .stars {
@@ -34,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle, rgba(255, 255, 255, 0.8) 2px, transparent 3px),
                 radial-gradient(circle, rgba(255, 255, 200, 0.6) 1px, transparent 2px),
                 radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 2px);
@@ -77,26 +78,53 @@
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
+            /* Removed fixed width: 100%; Let max-width handle it */
+            margin: 20px auto; /* Added top/bottom margin */
             position: relative;
             z-index: 1; /* Above the stars */
         }
+        /* Ensure image is responsive */
+        img {
+            max-width: 100%; /* Prevent image overflow */
+            height: auto;
+            display: block;
+            margin: 10px auto;
+        }
+        /* Media query for smaller screens */
+        @media (max-width: 650px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 36px;
+            }
+            p {
+                font-size: 18px;
+            }
+            .emoji {
+                font-size: 24px;
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="stars"></div> <!-- Falling stars layer -->
     <div class="container">
         <h1>Welcome to Szarki’s About Me! ^w^</h1>
-        <p>Hey there! I’m <span class="highlight">Szarki</span>, a shapeshifter! I can change my form and my sex (male, female, etc.)—pretty wild, huh? My mind stays mostly the same, but my shifts match my moods. In human years, I’m 21!</p>
-        <p>I’m not human—I’ve rejected that part. This body? Not me. I’m Szarki, a being beyond it all. I *am* my fursona, or my fursona is me!</p>
+        <p>Hey there! I’m <span class="highlight">Szarki</span>, a shapeshifting creature! I can change my form into <span class="highlight">furry, anthro, or feral</span> shapes, and my sex can shift between <span class="highlight">male, female, or hermaphrodite</span>—pretty wild, huh? Even though my body changes, <span class="highlight">my mind always stays the same</span>. My shifts often match my moods! In human years, I’m 21!</p>
+        <p>I’m not human—I’ve rejected that part. This body? Not truly me. I’m Szarki, a being beyond it all. I *am* my fursona, or my fursona is me!</p>
         <p>I’m a proud <span class="highlight">genderfluid</span> trans person <span class="emoji">🏳️‍⚧️</span>, <span class="highlight">pansexual</span> <span class="emoji">🏳️‍🌈</span>, and a furry for 7+ years <span class="emoji">🐾</span>. These are huge parts of who I am, and I love it!</p>
         <p>I’m happily taken by an amazing Avali named Alix! <span class="emoji">💖</span> I love him and care deeply for him, and I’m so happy to have him in my life.</p>
-        <img src="images/alix.png" alt="Alix" style="width:200px; height:auto; display:block; margin:10px auto;">
-        <p>IRL, I look like a femboy, and I’m making myself pretty: nails, exercise, shaving, the works! Call me <span class="highlight">Dr. Szarki</span>, future dentist (half-joking, half-serious)!</p>
+        <img src="images/alix.png" alt="Alix" style="width:200px;"> <!-- Height removed to maintain aspect ratio, style added directly for simplicity -->
+        <p>IRL, I look like a femboy and I own lots of female clothes! I love making myself pretty: nails, exercise, shaving, the works! I'm studying to be a <span class="highlight">future doctor irl</span>!</p>
         <p>I’m a silly, cute, friendly soul—people call me a big cutie! I’m into lewd stuff, yiff, and roleplaying. I adore my friends and want them to be happy.</p>
         <p>Feel free to hit me up on Discord. That’s probably how you found this page. I’m a proud trans, pan, furry person, and I welcome everyone to my little world. <span class="emoji">🐾✨</span></p>
     </div>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9243ba2c5b717bba',t:'MTc0MjYyNTkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9268ceb6ff80daa9',t:'MTc0MzAxNDc1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9268ceb6ff80daa9',t:'MTc0MzAxNDc1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
 </html>
