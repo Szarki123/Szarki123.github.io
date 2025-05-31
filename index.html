@@ -3,128 +3,478 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Szarki's About Me</title>
+    <title>About Szarki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            font-family: 'Comic Sans MS', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4, #c4e0e5, #96c8ff);
-            color: #333;
-            text-align: center;
-            line-height: 1.6;
-            position: relative;
-            overflow-x: hidden; /* Prevent horizontal scrollbar potentially caused by wide background */
+            padding: 0;
+            font-family: 'Exo 2', sans-serif;
+            background-color: #000000; /* This is the main page background */
+            color: #f0f0f0; /* Bright default text color */
+            line-height: 1.7;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
         }
-        /* Falling stars background */
-        .stars {
-            position: fixed; /* Stays fixed to the viewport */
-            top: -100%; /* Extended beyond viewport for seamless tiling */
-            left: -100%;
-            width: 300%; /* Larger than screen for infinite feel */
-            height: 300%;
-            background: transparent;
-            z-index: -1; /* Behind the content */
-            animation: fallStars 15s linear infinite; /* Diagonal fall */
-            transform: rotate(45deg); /* 45-degree tilt */
-        }
-        .stars::before {
-            content: '';
-            position: absolute;
+
+        .starry-background {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background:
-                radial-gradient(circle, rgba(255, 255, 255, 0.8) 2px, transparent 3px),
-                radial-gradient(circle, rgba(255, 255, 200, 0.6) 1px, transparent 2px),
-                radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 2px);
-            background-size: 100px 100px, 150px 150px, 200px 200px; /* Star spacing */
-            background-position: 0 0, 30px 30px, 60px 60px; /* Offset layers */
-            background-repeat: repeat; /* Ensures tiling */
-            animation: twinkle 3s infinite; /* Subtle twinkling */
-        }
-        @keyframes fallStars {
-            0% {
-                transform: translate(-33%, -33%) rotate(45deg); /* Start off-screen */
-            }
-            100% {
-                transform: translate(33%, 33%) rotate(45deg); /* End off-screen */
-            }
-        }
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 0.9; }
-        }
-        h1 {
-            font-size: 48px;
-            color: #ff6f91;
-            text-shadow: 2px 2px 4px #fff;
-        }
-        p {
-            font-size: 20px;
-            margin: 15px 0;
-        }
-        .highlight {
-            color: #ff4081;
-            font-weight: bold;
-        }
-        .emoji {
-            font-size: 28px;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
-            /* Removed fixed width: 100%; Let max-width handle it */
-            margin: 20px auto; /* Added top/bottom margin */
-            position: relative;
-            z-index: 1; /* Above the stars */
-        }
-        /* Ensure image is responsive */
-        img {
-            max-width: 100%; /* Prevent image overflow */
-            height: auto;
-            display: block;
-            margin: 10px auto;
-        }
-        /* Media query for smaller screens */
-        @media (max-width: 650px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 15px;
-            }
-            h1 {
-                font-size: 36px;
-            }
-            p {
-                font-size: 18px;
-            }
-            .emoji {
-                font-size: 24px;
-            }
+            z-index: -1; /* Behind the content container */
         }
 
+        #starCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .content-container {
+            position: relative; /* Still needs to be relative for z-index context if ever needed, but mainly for layout */
+            z-index: 1; /* Ensures text is above canvas, though canvas is z-index -1 */
+            
+            /* --- TEXT FLOATING DIRECTLY ON BACKGROUND --- */
+            background: transparent;  /* No background color for the container */
+            /* backdrop-filter: none; /* Explicitly none, or just remove */
+            
+            border-radius: 0;    /* No need for rounded corners if invisible */
+            
+            border: none;        /* No border */
+            box-shadow: none;    /* No box shadow */
+            /* --- END OF MODIFICATIONS --- */
+
+            padding: 35px 15px; /* Padding still defines the text area */
+            max-width: 580px;   /* Max width for the text block */
+            width: 90%;
+            margin: 20px auto;  /* Centering the text block */
+            text-align: left;
+            max-height: 88vh;   /* Allows content to scroll if it exceeds this height */
+            overflow-y: auto;   /* Enables scrolling */
+
+            /* Hide scrollbar */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .content-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 2.3em; /* Slightly larger H1 */
+            font-weight: 700; /* Bolder H1 */
+            color: #ffffff;
+            margin-bottom: 0.7em;
+            /* Stronger text shadow for H1 to stand out */
+            text-shadow: 0 0 15px rgba(200, 225, 255, 0.6), 
+                         0 0 8px rgba(200, 225, 255, 0.5),
+                         1px 1px 3px rgba(0,0,0,0.5); 
+            text-align: center;
+        }
+
+        p {
+            font-size: 1.1em; /* Slightly larger paragraph text */
+            font-weight: 400; /* Normal weight for better readability */
+            margin: 1.3em 0;
+            color: #f0f0f0; 
+            /* Text shadow for paragraphs to help readability against dynamic background */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7), 
+                         0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .highlight {
+            color: #fface0; /* Slightly adjusted highlight */
+            font-weight: 700; /* Bolder highlight */
+            /* Enhanced shadow for highlights */
+            text-shadow: 0 0 8px rgba(255, 172, 224, 0.6), 
+                         1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .important-note {
+            color: #ffe099; /* Brighter important note */
+            font-weight: 600; /* Bolder important note */
+            text-shadow: 0 0 8px rgba(255, 224, 153, 0.5), 
+                         1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .partner-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            /* border-top: 1px solid rgba(255, 255, 255, 0.15); /* Optional subtle separator line */
+            text-align: center;
+        }
+        /* If you want a separator, uncomment border-top above. It will be a line in space. */
+
+
+        .partner-section p { /* "My partner is:" text */
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        
+        .partner-name {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #d1eaff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(209, 234, 255, 0.6),
+                         1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .partner-image {
+            max-width: 150px;
+            max-height: 150px;
+            width: auto;   
+            height: auto;  
+            border-radius: 50%;
+            margin: 0 auto 20px auto;
+            display: block;
+            object-fit: cover; 
+            /* Adding a shadow to the image itself to lift it from the background */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15), 
+                        0 0 25px rgba(255, 255, 255, 0.1);
+            /* border: 2px solid rgba(255,255,255,0.1); /* Optional subtle border */
+        }
+        
+        .signature {
+            text-align: center;
+            font-size: 1.6em;
+            margin-top: 35px;
+            color: #c5d9ed;
+            text-shadow: 0 0 10px rgba(197, 217, 237, 0.6), 
+                         1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 600px) {
+            .content-container {
+                padding: 25px 10px; /* Reduced side padding a bit more */
+                width: 95%; /* Slightly wider on small screens */
+                max-height: 90vh;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            p {
+                font-size: 1.05em;
+            }
+            .partner-image {
+                max-width: 120px;
+                max-height: 120px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="stars"></div> <!-- Falling stars layer -->
-    <div class="container">
-        <h1>Welcome to Szarki’s About Me! ^w^</h1>
-        <p>Hey there! I’m <span class="highlight">Szarki</span>, a shapeshifting creature! I can change my form into <span class="highlight">furry, anthro, or feral</span> shapes, and my sex can shift between <span class="highlight">male, female, or hermaphrodite</span>—pretty wild, huh? Even though my body changes, <span class="highlight">my mind always stays the same</span>. My shifts often match my moods! In human years, I’m 21!</p>
-        <p>I’m not human—I’ve rejected that part. This body? Not truly me. I’m Szarki, a being beyond it all. I *am* my fursona, or my fursona is me!</p>
-        <p>I’m a proud <span class="highlight">genderfluid</span> trans person <span class="emoji">🏳️‍⚧️</span>, <span class="highlight">pansexual</span> <span class="emoji">🏳️‍🌈</span>, and a furry for 7+ years <span class="emoji">🐾</span>. These are huge parts of who I am, and I love it!</p>
-        <p>I’m happily taken by an amazing Avali named Alix! <span class="emoji">💖</span> I love him and care deeply for him, and I’m so happy to have him in my life.</p>
-        <img src="images/alix.png" alt="Alix" style="width:200px;"> <!-- Height removed to maintain aspect ratio, style added directly for simplicity -->
-        <p>IRL, I look like a femboy and I own lots of female clothes! I love making myself pretty: nails, exercise, shaving, the works! I'm studying to be a <span class="highlight">future doctor irl</span>!</p>
-        <p>I’m a silly, cute, friendly soul—people call me a big cutie! I’m into lewd stuff, yiff, and roleplaying. I adore my friends and want them to be happy.</p>
-        <p>Feel free to hit me up on Discord. That’s probably how you found this page. I’m a proud trans, pan, furry person, and I welcome everyone to my little world. <span class="emoji">🐾✨</span></p>
+    <div class="starry-background">
+        <canvas id="starCanvas"></canvas>
     </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9243ba2c5b717bba',t:'MTc0MjYyNTkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9268ceb6ff80daa9',t:'MTc0MzAxNDc1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+    <div class="content-container">
+        <h1>About Szarki</h1>
+        <p>
+            I am a <span class="highlight">shapeshifter</span> lost in space that found itself randomly in the body of a human...
+            My name is Szarki and my human body age is 21. I am also <span class="highlight">genderfluid</span> and <span class="highlight">pansexual</span>.
+            I am a huge <span class="highlight">furry</span>, as my identity is connected with it.
+        </p>
+        <p>
+            I am a doctor-dentist student in Poland. My dream is to own a VR headset and do stuff in VRChat,
+            where I believe I can live out my dream of being myself and my own forms, even if it's a game.
+            I am also a gamer, I roleplay, write stories... I am also pretty <span class="highlight">lewd</span> but <span class="important-note">I do not do lewd stuff with strangers!!!
+            I do not want to talk to people below 18 years old!</span>
+            I care deeply about my friends and partner/s. They mean everything to me and I always try to be a good "person".
+        </p>
+        <p>
+            Please feel free to add me on Discord: <span class="highlight">8917</span> and hit me up anytime.
+            I love making new friends and meeting new people. I am open to talk about many things.
+        </p>
+
+        <div class="partner-section">
+            <p>My partner is:</p>
+            <div class="partner-name">[Partner's Name Here]</div>
+            <img src="path/to/your/partner_image.png" alt="[Partner's Name]" class="partner-image">
+            <!-- Example placeholder:
+            <img src="https://via.placeholder.com/150/000000/FFFFFF?Text=Partner" alt="Partner Image Placeholder" class="partner-image">
+            -->
+        </div>
+
+        <p class="signature">⭐~</p>
+    </div>
+
+    <script>
+        // --- PASTE THE EXACT SAME JAVASCRIPT FROM THE PREVIOUS VERSION HERE ---
+        // (The script for stars, ISS, Starlink train)
+        // It starts with: const canvas = document.getElementById('starCanvas');
+        // And ends with: animate();
+
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let stars = [];
+        let iss;
+        let starlinkTrain = [];
+
+        const numStarsBase = 100;
+        const starDensityFactor = 15000; // Adjusted for moving stars
+        const maxTotalStars = 500;
+
+        // --- Star Class ---
+        class Star {
+            constructor(x, y, radius, baseOpacity, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.baseOpacity = baseOpacity;
+                this.opacity = 0;
+                this.color = color;
+                
+                this.fadeInSpeed = Math.random() * 0.003 + 0.001; // Slower
+                this.fadeOutSpeed = Math.random() * 0.0015 + 0.0005; // Slower
+                this.twinkleSpeed = Math.random() * 0.015 + 0.005; // Slower
+                this.twinklePhase = Math.random() * Math.PI * 2;
+
+                this.life = 0;
+                this.maxLife = Math.random() * 1000 + 800; // Longer life (e.g., 13-30 seconds at 60fps)
+                this.state = 'appearing';
+
+                this.dx = (Math.random() - 0.5) * 0.08; // Slow drift
+                this.dy = (Math.random() - 0.5) * 0.08; // Slow drift
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+
+                const shimmerFactor = 0.7 + 0.3 * Math.sin(this.twinklePhase + this.life * this.twinkleSpeed);
+                const currentOpacity = this.opacity * shimmerFactor;
+
+                const glowRadius = this.radius * (2.5 + Math.sin(this.twinklePhase + this.life * this.twinkleSpeed * 0.5) * 1.0);
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRadius);
+                gradient.addColorStop(0, `${this.color}${currentOpacity * 0.4})`);
+                gradient.addColorStop(0.6, `${this.color}${currentOpacity * 0.1})`);
+                gradient.addColorStop(1, `${this.color}0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = `${this.color}${currentOpacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            update() {
+                this.life++;
+                this.x += this.dx;
+                this.y += this.dy;
+
+                // Wraparound logic
+                if (this.x < -this.radius * 3) this.x = canvas.width + this.radius * 3;
+                if (this.x > canvas.width + this.radius * 3) this.x = -this.radius * 3;
+                if (this.y < -this.radius * 3) this.y = canvas.height + this.radius * 3;
+                if (this.y > canvas.height + this.radius * 3) this.y = -this.radius * 3;
+
+
+                if (this.state === 'appearing') {
+                    this.opacity += this.fadeInSpeed;
+                    if (this.opacity >= this.baseOpacity) {
+                        this.opacity = this.baseOpacity;
+                        this.state = 'shimmering';
+                    }
+                } else if (this.state === 'shimmering') {
+                    if (this.life >= this.maxLife * 0.85) { // Start fading out later
+                        this.state = 'disappearing';
+                    }
+                } else if (this.state === 'disappearing') {
+                    this.opacity -= this.fadeOutSpeed;
+                    if (this.opacity <= 0) {
+                        this.opacity = 0;
+                        this.reset();
+                    }
+                }
+
+                if (this.life >= this.maxLife && this.state !== 'disappearing') {
+                    this.state = 'disappearing';
+                }
+            }
+            
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.radius = Math.random() * 1.1 + 0.2; // Slightly smaller max
+                this.baseOpacity = Math.random() * 0.4 + 0.2; // Dimmer base
+                
+                if (Math.random() > 0.9) { // Fewer colored stars
+                    const H = 200 + Math.random() * 60; 
+                    const S = Math.random() * 20 + 50; 
+                    const L = Math.random() * 15 + 70; 
+                    this.color = `hsla(${H}, ${S}%, ${L}%,`;
+                } else {
+                    this.color = `rgba(255, 255, 255,`;
+                }
+
+                this.opacity = 0;
+                this.life = 0;
+                this.maxLife = Math.random() * 1000 + 800;
+                this.state = 'appearing';
+                this.twinklePhase = Math.random() * Math.PI * 2;
+                this.dx = (Math.random() - 0.5) * 0.08;
+                this.dy = (Math.random() - 0.5) * 0.08;
+            }
+        }
+
+        // --- MovingObject Class (for ISS, Starlink dots) ---
+        class MovingObject {
+            constructor(x, y, dx, dy, size, color, drawLogic, opacity = 1) {
+                this.x = x;
+                this.y = y;
+                this.dx = dx;
+                this.dy = dy;
+                this.size = size;
+                this.color = color;
+                this.drawLogic = drawLogic;
+                this.opacity = opacity;
+                this.initialX = x; // For Starlink reset
+                this.initialY = y; // For Starlink reset
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.wraparound();
+            }
+
+            wraparound() {
+                const margin = this.size * 2; // Ensure object is fully off-screen before wrapping
+                if (this.dx > 0 && this.x > canvas.width + margin) this.x = -margin;
+                else if (this.dx < 0 && this.x < -margin) this.x = canvas.width + margin;
+
+                if (this.dy > 0 && this.y > canvas.height + margin) this.y = -margin;
+                else if (this.dy < 0 && this.y < -margin) this.y = canvas.height + margin;
+            }
+
+            draw(ctx) {
+                this.drawLogic(ctx, this.x, this.y, this.size, this.color, this.opacity);
+            }
+        }
+
+        // --- Draw Functions for Moving Objects ---
+        function drawISS(ctx, x, y, size, color, opacity) {
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = color;
+            // Simple ISS: body + panels
+            ctx.fillRect(x - size / 2, y - size / 8, size, size / 4); // Body
+            ctx.fillRect(x - size / 16, y - size / 2.5, size / 8, size); // Solar panels (vertical part)
+             // Add a subtle glow
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "rgba(200, 200, 255, 0.5)";
+            ctx.fillRect(x - size / 2, y - size / 8, size, size / 4);
+            ctx.fillRect(x - size / 16, y - size / 2.5, size / 8, size);
+            ctx.shadowBlur = 0; // Reset shadow
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawStarlinkDot(ctx, x, y, size, color, opacity) {
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+
+        // --- Initialization ---
+        function initScene() {
+            stars = [];
+            starlinkTrain = [];
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const screenArea = canvas.width * canvas.height;
+            const numStarsDynamic = Math.floor(numStarsBase + screenArea / starDensityFactor);
+            const actualNumStars = Math.min(numStarsDynamic, maxTotalStars);
+
+            for (let i = 0; i < actualNumStars; i++) {
+                const star = new Star(0,0,0,0,'rgba(255,255,255,');
+                star.reset();
+                star.opacity = Math.random() * star.baseOpacity; 
+                star.life = Math.random() * star.maxLife; 
+                if (star.opacity > 0) star.state = 'shimmering';
+                stars.push(star);
+            }
+
+            // Initialize ISS
+            iss = new MovingObject(
+                Math.random() * canvas.width, Math.random() * canvas.height,
+                (Math.random() - 0.5) * 0.2 + 0.1, // dx (0.1 to 0.3 or -0.1 to -0.3)
+                (Math.random() - 0.5) * 0.2 + 0.1, // dy
+                20, // size
+                'rgba(220, 220, 230, 0.9)', // color
+                drawISS
+            );
+
+            // Initialize Starlink Train
+            const numStarlinkDots = 25;
+            const starlinkSpeed = 0.35;
+            let trainAngle = Math.random() * Math.PI * 2;
+            let leaderDx = Math.cos(trainAngle) * starlinkSpeed;
+            let leaderDy = Math.sin(trainAngle) * starlinkSpeed;
+            let startX = Math.random() * canvas.width;
+            let startY = Math.random() * canvas.height;
+            const dotSpacing = 8; // pixels between dots
+
+            for (let i = 0; i < numStarlinkDots; i++) {
+                // Offset each dot from the leader's path start
+                let currentX = startX - i * Math.cos(trainAngle) * dotSpacing;
+                let currentY = startY - i * Math.sin(trainAngle) * dotSpacing;
+                
+                starlinkTrain.push(new MovingObject(
+                    currentX, currentY,
+                    leaderDx, leaderDy,
+                    1.2, // size of dot
+                    'rgba(180, 180, 200, 0.55)', // color of dot
+                    drawStarlinkDot,
+                    0.55 // opacity
+                ));
+            }
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            if (iss) {
+                iss.update();
+                iss.draw(ctx);
+            }
+
+            starlinkTrain.forEach(dot => {
+                dot.update();
+                dot.draw(ctx);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', initScene);
+
+        initScene();
+        animate();
+    </script>
 </body>
 </html>
