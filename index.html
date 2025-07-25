@@ -3,469 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Szarki</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Misera</title>
     <style>
+        /* General Body & Font Styles */
         body {
+            background-color: #000;
+            color: #00FF00; /* Classic green terminal text */
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 0;
-            font-family: 'Exo 2', sans-serif;
-            background-color: #000000; /* This is the main page background */
-            color: #f0f0f0; /* Bright default text color */
-            line-height: 1.7;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            justify-content: center;
+            user-select: none;
+            cursor: default;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
         }
 
-        .starry-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1; /* Behind the content container */
-        }
+        /* --- STAGE 1: LOGIN SCREEN --- */
+        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; transition: opacity 1s ease-out; }
+        #login-screen h1 { color: #fff; font-size: 5rem; margin: 0; letter-spacing: 5px; text-shadow: 0 0 5px #fff; }
+        .login-box { margin-top: 2rem; text-align: center; }
+        .login-box input { background-color: #111; border: 1px solid #333; color: #fff; padding: 10px; margin: 5px; width: 250px; font-family: inherit; }
+        .login-box button { background-color: #1a1a1a; border: 1px solid #444; color: #ccc; padding: 10px 20px; cursor: pointer; font-family: inherit; margin-top: 1rem; transition: background-color 0.3s, color 0.3s; }
+        .login-box button:hover:not(:disabled) { background-color: #800; color: #fff; }
+        .login-box button:disabled { background-color: #111; color: #444; cursor: not-allowed; }
+        #guest-login { background-color: transparent; border: none; color: #5c5c5c; text-decoration: underline; }
+        #guest-login:hover { background-color: transparent; color: #999; }
+        #error-message { color: #a00; margin-top: 1rem; height: 20px; font-size: 0.9rem; visibility: hidden; }
 
-        #starCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        /* --- STAGE 2: LOADING SCREEN --- */
+        #loading-screen { display: none; justify-content: center; align-items: center; height: 100vh; }
+        #loading-text { text-align: left; width: 80%; max-width: 700px; font-size: 1.1rem; line-height: 1.6; }
+        #loading-text p { margin: 2px 0; }
+        .ok { color: #00FF00; }
+        .warn { color: #E8D558; }
+        .proc { color: #5593E0; }
+        .fail { color: #a00; }
+        .data { color: #666; }
 
-        .content-container {
-            position: relative; /* Still needs to be relative for z-index context if ever needed, but mainly for layout */
-            z-index: 1; /* Ensures text is above canvas, though canvas is z-index -1 */
-            
-            /* --- TEXT FLOATING DIRECTLY ON BACKGROUND --- */
-            background: transparent;  /* No background color for the container */
-            /* backdrop-filter: none; /* Explicitly none, or just remove */
-            
-            border-radius: 0;    /* No need for rounded corners if invisible */
-            
-            border: none;        /* No border */
-            box-shadow: none;    /* No box shadow */
-            /* --- END OF MODIFICATIONS --- */
+        /* --- STAGE 3: MS-DOS CHAT INTERFACE --- */
+        #chat-container { display: none; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; position: relative; }
+        #user-list-box { position: absolute; top: 10px; right: 10px; border: 2px double #00FF00; padding: 5px 10px; background-color: #000; }
+        #user-list-box h3 { margin: 0 0 5px 0; font-size: 1rem; border-bottom: 1px solid #00FF00; text-align: center; }
+        #user-list-box p { margin: 0; font-size: 1rem; }
+        #chat-log { flex-grow: 1; overflow-y: auto; font-size: 1.2rem; line-height: 1.5; padding-right: 200px; }
+        #chat-log .system-message { text-align: center; color: #888; margin-top: 20%; }
+        #chat-log .message, #chat-log .locked-file, #chat-log .easter-egg { white-space: pre-wrap; margin: 5px 0; }
+        .author-szarki { color: #FF6347; }
+        .typing-indicator { color: #888; font-style: italic; }
+        #chat-input-area { display: flex; align-items: center; margin-top: 10px; font-size: 1.2rem; }
+        #chat-input-area span { margin-right: 5px; }
+        #chat-input { background: transparent; border: none; outline: none; color: #00FF00; font-family: inherit; font-size: inherit; text-shadow: inherit; flex-grow: 1; }
+        #chat-input::-ms-clear { display: none; }
+        #chat-input:focus { caret-color: #00FF00; }
 
-            padding: 35px 15px; /* Padding still defines the text area */
-            max-width: 580px;   /* Max width for the text block */
-            width: 90%;
-            margin: 20px auto;  /* Centering the text block */
-            text-align: left;
-            max-height: 88vh;   /* Allows content to scroll if it exceeds this height */
-            overflow-y: auto;   /* Enables scrolling */
-
-            /* Hide scrollbar */
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .content-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        h1 {
-            font-family: 'Exo 2', sans-serif;
-            font-size: 2.3em; /* Slightly larger H1 */
-            font-weight: 700; /* Bolder H1 */
-            color: #ffffff;
-            margin-bottom: 0.7em;
-            /* Stronger text shadow for H1 to stand out */
-            text-shadow: 0 0 15px rgba(200, 225, 255, 0.6), 
-                         0 0 8px rgba(200, 225, 255, 0.5),
-                         1px 1px 3px rgba(0,0,0,0.5); 
-            text-align: center;
-        }
-
-        p {
-            font-size: 1.1em; /* Slightly larger paragraph text */
-            font-weight: 400; /* Normal weight for better readability */
-            margin: 1.3em 0;
-            color: #f0f0f0; 
-            /* Text shadow for paragraphs to help readability against dynamic background */
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7), 
-                         0 0 5px rgba(0,0,0,0.5);
-        }
-
-        .highlight {
-            color: #fface0; /* Slightly adjusted highlight */
-            font-weight: 700; /* Bolder highlight */
-            /* Enhanced shadow for highlights */
-            text-shadow: 0 0 8px rgba(255, 172, 224, 0.6), 
-                         1px 1px 3px rgba(0,0,0,0.5);
-        }
-
-        .important-note {
-            color: #ffe099; /* Brighter important note */
-            font-weight: 600; /* Bolder important note */
-            text-shadow: 0 0 8px rgba(255, 224, 153, 0.5), 
-                         1px 1px 3px rgba(0,0,0,0.5);
-        }
+        /* --- DIGITAL ID CARD STYLES --- */
+/* --- DIGITAL ID CARD STYLES --- */
+.digital-id-card {
+    border: 2px double #00FF00;
+    padding: 15px;
+    margin: 15px 0;
+    background-color: #050505;
+    white-space: normal; /* THIS IS THE CRITICAL FIX */
+}
+.id-card-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+.id-card-pic {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 1px solid #00FF00;
+    image-rendering: pixelated;
+}
+.id-card-info {
+    flex-grow: 1;
+}
+.id-card-info p {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    line-height: 1.2; /* This ensures the lines inside the card are compact */
+}
+.highlight-blue {
+    color: #5593E0;
+    text-shadow: 0 0 5px rgba(85, 147, 224, 0.5);
+}
         
-        .partner-section {
-            margin-top: 30px;
-            padding-top: 25px;
-            /* border-top: 1px solid rgba(255, 255, 255, 0.15); /* Optional subtle separator line */
-            text-align: center;
-        }
-        /* If you want a separator, uncomment border-top above. It will be a line in space. */
-
-
-        .partner-section p { /* "My partner is:" text */
-            font-weight: 400;
-            margin-bottom: 10px;
-            color: #e0e0e0;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
-        }
+        .locked-file-box { border: 1px dashed #a00; padding: 10px; background-color: #100; }
+        .locked-file-box p { margin: 0; }
+        .access-denied { color: #a00; font-weight: bold; }
         
-        .partner-name {
-            font-size: 1.25em;
-            font-weight: 700;
-            color: #d1eaff;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px rgba(209, 234, 255, 0.6),
-                         1px 1px 3px rgba(0,0,0,0.5);
-        }
+        .btc-wallet { color: #E8D558; border: 1px solid #E8D558; padding: 10px; margin-top: 5px; text-align: center; }
 
-        .partner-image {
-            max-width: 150px;
-            max-height: 150px;
-            width: auto;   
-            height: auto;  
-            border-radius: 50%;
-            margin: 0 auto 20px auto;
-            display: block;
-            object-fit: cover; 
-            /* Adding a shadow to the image itself to lift it from the background */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15), 
-                        0 0 25px rgba(255, 255, 255, 0.1);
-            /* border: 2px solid rgba(255,255,255,0.1); /* Optional subtle border */
-        }
-        
-        .signature {
-            text-align: center;
-            font-size: 1.6em;
-            margin-top: 35px;
-            color: #c5d9ed;
-            text-shadow: 0 0 10px rgba(197, 217, 237, 0.6), 
-                         1px 1px 3px rgba(0,0,0,0.5);
-        }
+        .easter-egg-image { max-width: 300px; border: 2px solid #00FF00; margin-top: 10px; }
 
-        @media (max-width: 600px) {
-            .content-container {
-                padding: 25px 10px; /* Reduced side padding a bit more */
-                width: 95%; /* Slightly wider on small screens */
-                max-height: 90vh;
-            }
-            h1 {
-                font-size: 2em;
-            }
-            p {
-                font-size: 1.05em;
-            }
-            .partner-image {
-                max-width: 120px;
-                max-height: 120px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="starry-background">
-        <canvas id="starCanvas"></canvas>
+
+    <audio id="message-sound" src="https://Szarki123.github.io/images/message.wav" preload="auto"></audio>
+
+    <div id="login-screen">
+        <h1>Misera</h1>
+        <div class="login-box">
+            <input type="text" id="username" placeholder="secure_login_id"><input type="password" id="password" placeholder="authentication_key">
+            <p id="error-message">Error Message Placeholder</p>
+            <button id="login-attempt" disabled>Initiate Connection</button>
+            <button id="guest-login">Login as Guest</button>
+        </div>
     </div>
 
-    <div class="content-container">
-        <h1>About Szarki</h1>
-        <p>
-            I am a <span class="highlight">shapeshifter</span> lost in space that found itself randomly in the body of a human...
-            My name is Szarki and my human body age is 21. I am also <span class="highlight">genderfluid</span> and <span class="highlight">pansexual</span>.
-            I am a huge <span class="highlight">furry</span>, as my identity is connected with it.
-        </p>
-        <p>
-            I am a doctor-dentist student in Poland. My dream is to own a VR headset and do stuff in VRChat,
-            where I believe I can live out my dream of being myself and my own forms, even if it's a game.
-            I am also a gamer, I roleplay, write stories... I am also pretty <span class="highlight">lewd</span> but <span class="important-note">I do not do lewd stuff with strangers!!!
-            I do not want to talk to people below 18 years old!</span>
-            I care deeply about my friends. They mean everything to me and I always try to be a good "person".
-        </p>
-        <p>
-            Please feel free to add me on Discord: <span class="highlight">8917</span> and hit me up anytime.
-            I love making new friends and meeting new people. I am open to talk about many things.
-        </p>
+    <div id="loading-screen">
+        <div id="loading-text"></div>
+    </div>
 
-        <p class="signature">⭐~</p>
+    <div id="chat-container">
+        <div id="user-list-box">
+            <h3>ACTIVE</h3>
+            <p>> Szarki</p>
+            <p>> Guest</p>
+        </div>
+        <div id="chat-log"></div>
+        <div id="chat-input-area">
+            <span>M:\></span>
+            <input type="text" id="chat-input" autocomplete="off">
+        </div>
     </div>
 
     <script>
-        // --- PASTE THE EXACT SAME JAVASCRIPT FROM THE PREVIOUS VERSION HERE ---
-        // (The script for stars, ISS, Starlink train)
-        // It starts with: const canvas = document.getElementById('starCanvas');
-        // And ends with: animate();
+        // --- BROWSER-LEVEL INTERACTIONS ---
+        window.addEventListener('beforeunload', (event) => { event.preventDefault(); event.returnValue = ''; });
+        document.addEventListener('contextmenu', event => event.preventDefault());
 
-        const canvas = document.getElementById('starCanvas');
-        const ctx = canvas.getContext('2d');
+        // --- GRAB ALL THE ELEMENTS ---
+        const loginScreen = document.getElementById('login-screen'), usernameInput = document.getElementById('username'), passwordInput = document.getElementById('password'),
+              loginAttemptBtn = document.getElementById('login-attempt'), errorMessage = document.getElementById('error-message'), loadingScreen = document.getElementById('loading-screen'),
+              loadingText = document.getElementById('loading-text'), chatContainer = document.getElementById('chat-container'), chatLog = document.getElementById('chat-log'),
+              chatInput = document.getElementById('chat-input'), messageSound = document.getElementById('message-sound'), originalTitle = document.title;
+        
+        // --- AUDIO CONFIGURATION ---
+        messageSound.volume = 0.1;
 
-        let stars = [];
-        let iss;
-        let starlinkTrain = [];
+        // --- CHAT SCRIPT DEFINITION ---
+        const chatScript = [
+            { delay: 2000, typing: 1000, author: "Szarki", text: "Oh hai", type: 'message' },
+            { delay: 2000, typing: 1500, author: "Szarki", text: "someone visited my site finally", type: 'message' },
+            { delay: 3000, typing: 2000, author: "Szarki", text: "Chat here is fully encrypted so no worries", type: 'message' },
+            { delay: 3000, typing: 1200, author: "Szarki", text: "I think I should introduce myself", type: 'message' },
+            { delay: 3000, typing: 1800, author: "Szarki", text: "uh, give me a moment...", type: 'message' },
+            { delay: 3000, typing: 1000, author: "Szarki", type: 'id_card' },
+            { delay: 1000, typing: 1000, author: "Szarki", type: 'locked_file' },
+            { delay: 10000, typing: 2500, author: "Szarki", text: "What do you think? Are you interested in Misera? I will leave you to it....", type: 'message' },
+            { delay: 4000, typing: 1500, author: "Szarki", text: `Support Misera Development (Name Your Price):\nbc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`, type: 'btc_message' }
+        ];
 
-        const numStarsBase = 100;
-        const starDensityFactor = 15000; // Adjusted for moving stars
-        const maxTotalStars = 500;
-
-        // --- Star Class ---
-        class Star {
-            constructor(x, y, radius, baseOpacity, color) {
-                this.x = x;
-                this.y = y;
-                this.radius = radius;
-                this.baseOpacity = baseOpacity;
-                this.opacity = 0;
-                this.color = color;
-                
-                this.fadeInSpeed = Math.random() * 0.003 + 0.001; // Slower
-                this.fadeOutSpeed = Math.random() * 0.0015 + 0.0005; // Slower
-                this.twinkleSpeed = Math.random() * 0.015 + 0.005; // Slower
-                this.twinklePhase = Math.random() * Math.PI * 2;
-
-                this.life = 0;
-                this.maxLife = Math.random() * 1000 + 800; // Longer life (e.g., 13-30 seconds at 60fps)
-                this.state = 'appearing';
-
-                this.dx = (Math.random() - 0.5) * 0.08; // Slow drift
-                this.dy = (Math.random() - 0.5) * 0.08; // Slow drift
+        // --- PERSISTENCE LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const history = localStorage.getItem('misera_chat_history');
+            if (history) {
+                showInstantChat(JSON.parse(history));
             }
+        });
+        
+        // --- LOGIN SCREEN LOGIC ---
+        function checkLoginFields() { loginAttemptBtn.disabled = !(usernameInput.value.trim() && passwordInput.value.trim()); }
+        usernameInput.addEventListener('input', checkLoginFields);
+        passwordInput.addEventListener('input', checkLoginFields);
+        loginAttemptBtn.addEventListener('click', () => {
+            loginAttemptBtn.textContent = "Authenticating..."; loginAttemptBtn.disabled = true; errorMessage.style.visibility = 'hidden';
+            setTimeout(() => {
+                errorMessage.textContent = "Connection Refused: Invalid signature hash. [EC: 0x80070005]";
+                errorMessage.style.visibility = 'visible'; loginAttemptBtn.textContent = "Initiate Connection"; checkLoginFields(); 
+            }, 2500);
+        });
+        document.getElementById('guest-login').addEventListener('click', () => {
+            loginScreen.style.opacity = '0'; setTimeout(startLoadingSequence, 1000);
+        });
 
-            draw() {
-                if (this.opacity <= 0) return;
-
-                const shimmerFactor = 0.7 + 0.3 * Math.sin(this.twinklePhase + this.life * this.twinkleSpeed);
-                const currentOpacity = this.opacity * shimmerFactor;
-
-                const glowRadius = this.radius * (2.5 + Math.sin(this.twinklePhase + this.life * this.twinkleSpeed * 0.5) * 1.0);
-                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRadius);
-                gradient.addColorStop(0, `${this.color}${currentOpacity * 0.4})`);
-                gradient.addColorStop(0.6, `${this.color}${currentOpacity * 0.1})`);
-                gradient.addColorStop(1, `${this.color}0)`);
-
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = `${this.color}${currentOpacity})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
+        // --- LOADING SEQUENCE ---
+        function startLoadingSequence() {
+            loginScreen.style.display = 'none'; loadingScreen.style.display = 'flex';
+            const fakeIP = `172.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}`;
+            const messages = [
+                [`[INIT] Bootstrapping guest session from client ${fakeIP}...`, 1000], [`[DNS] Resolving misera.onion via Tor proxy...`, 1500], [`[ROUTE] Attempting to build circuit (3 hops)...`, 500],
+                [`[ROUTE] > Hop 1/3 to node 7A4F... <span class="ok">[OK]</span> (110ms)`, 800], [`[ROUTE] > Hop 2/3 to node B3D1... <span class="fail">[TIMEOUT]</span>`, 1200],
+                [`[ROUTE] > Rerouting... Hop 2/3 to node F9C2... <span class="ok">[OK]</span> (280ms)`, 1000], [`[ROUTE] > Hop 3/3 to exit node 4E0A... <span class="ok">[OK]</span> (450ms)`, 800],
+                [`[ROUTE] Circuit established.`, 1500], [`[AUTH] Anonymous ticket requested from host... <span class="ok">[OK]</span>`, 1000],
+                [`<span class="proc">[CRYPTO] Generating ephemeral Diffie-Hellman keys...</span>`, 1800], [`<span class="proc">[CRYPTO] Exchanging keys with host...</span>`, 1500],
+                [`<span class="proc">[CRYPTO] Server signature verified.</span>`, 800], [`<span class="proc">[CRYPTO] Handshake complete. Wrapping connection in AES-256 layer.</span>`, 1000],
+                [`[NET] Connection established.`, 500], [`<span class="warn">[WARN] SSL certificate is self-signed and expired. Trusting anyway...</span>`, 2000],
+                [`[SYNC] Receiving session manifest...`, 500]
+            ];
+            let i = 0;
+            function showMessage() { if (i < messages.length) { loadingText.innerHTML += `<p>${messages[i][0]}</p>`; setTimeout(showMessage, messages[i++][1]); } else { startDataStream(); } }
+            function startDataStream() {
+                let streamCount = 0; const streamInterval = setInterval(() => {
+                    let line = '>'; for(let j = 0; j < 30; j++) line += Math.random().toString(16).substr(2, 2).toUpperCase() + ' ';
+                    loadingText.innerHTML += `<p class="data">${line}</p>`; window.scrollTo(0, document.body.scrollHeight);
+                    if (++streamCount >= 5) { clearInterval(streamInterval); finalizeConnection(); }
+                }, 200);
             }
-
-            update() {
-                this.life++;
-                this.x += this.dx;
-                this.y += this.dy;
-
-                // Wraparound logic
-                if (this.x < -this.radius * 3) this.x = canvas.width + this.radius * 3;
-                if (this.x > canvas.width + this.radius * 3) this.x = -this.radius * 3;
-                if (this.y < -this.radius * 3) this.y = canvas.height + this.radius * 3;
-                if (this.y > canvas.height + this.radius * 3) this.y = -this.radius * 3;
-
-
-                if (this.state === 'appearing') {
-                    this.opacity += this.fadeInSpeed;
-                    if (this.opacity >= this.baseOpacity) {
-                        this.opacity = this.baseOpacity;
-                        this.state = 'shimmering';
-                    }
-                } else if (this.state === 'shimmering') {
-                    if (this.life >= this.maxLife * 0.85) { // Start fading out later
-                        this.state = 'disappearing';
-                    }
-                } else if (this.state === 'disappearing') {
-                    this.opacity -= this.fadeOutSpeed;
-                    if (this.opacity <= 0) {
-                        this.opacity = 0;
-                        this.reset();
-                    }
-                }
-
-                if (this.life >= this.maxLife && this.state !== 'disappearing') {
-                    this.state = 'disappearing';
-                }
+            function finalizeConnection() {
+                setTimeout(() => {
+                    loadingText.innerHTML += `<p>[SYNC] Manifest received. <span class="ok">[OK]</span></p>`;
+                    setTimeout(() => {
+                        loadingText.innerHTML += `<p>[DONE] Welcome to Misera.</p>`; localStorage.setItem('misera_chat_history', JSON.stringify([]));
+                        setTimeout(showChatAndStartScript, 1500);
+                    }, 1000);
+                }, 500);
             }
-            
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.radius = Math.random() * 1.1 + 0.2; // Slightly smaller max
-                this.baseOpacity = Math.random() * 0.4 + 0.2; // Dimmer base
-                
-                if (Math.random() > 0.9) { // Fewer colored stars
-                    const H = 200 + Math.random() * 60; 
-                    const S = Math.random() * 20 + 50; 
-                    const L = Math.random() * 15 + 70; 
-                    this.color = `hsla(${H}, ${S}%, ${L}%,`;
-                } else {
-                    this.color = `rgba(255, 255, 255,`;
-                }
-
-                this.opacity = 0;
-                this.life = 0;
-                this.maxLife = Math.random() * 1000 + 800;
-                this.state = 'appearing';
-                this.twinklePhase = Math.random() * Math.PI * 2;
-                this.dx = (Math.random() - 0.5) * 0.08;
-                this.dy = (Math.random() - 0.5) * 0.08;
-            }
+            showMessage();
+        }
+        
+        // --- CHAT INTERFACE LOGIC ---
+        function showChatAndStartScript() {
+            loadingScreen.style.display = 'none'; chatContainer.style.display = 'flex'; chatInput.focus();
+            chatLog.innerHTML = `<p class="system-message">-- Channel is empty. Waiting for activity --</p>`;
+            runChatScript(0); 
         }
 
-        // --- MovingObject Class (for ISS, Starlink dots) ---
-        class MovingObject {
-            constructor(x, y, dx, dy, size, color, drawLogic, opacity = 1) {
-                this.x = x;
-                this.y = y;
-                this.dx = dx;
-                this.dy = dy;
-                this.size = size;
-                this.color = color;
-                this.drawLogic = drawLogic;
-                this.opacity = opacity;
-                this.initialX = x; // For Starlink reset
-                this.initialY = y; // For Starlink reset
-            }
-
-            update() {
-                this.x += this.dx;
-                this.y += this.dy;
-                this.wraparound();
-            }
-
-            wraparound() {
-                const margin = this.size * 2; // Ensure object is fully off-screen before wrapping
-                if (this.dx > 0 && this.x > canvas.width + margin) this.x = -margin;
-                else if (this.dx < 0 && this.x < -margin) this.x = canvas.width + margin;
-
-                if (this.dy > 0 && this.y > canvas.height + margin) this.y = -margin;
-                else if (this.dy < 0 && this.y < -margin) this.y = canvas.height + margin;
-            }
-
-            draw(ctx) {
-                this.drawLogic(ctx, this.x, this.y, this.size, this.color, this.opacity);
-            }
-        }
-
-        // --- Draw Functions for Moving Objects ---
-        function drawISS(ctx, x, y, size, color, opacity) {
-            ctx.globalAlpha = opacity;
-            ctx.fillStyle = color;
-            // Simple ISS: body + panels
-            ctx.fillRect(x - size / 2, y - size / 8, size, size / 4); // Body
-            ctx.fillRect(x - size / 16, y - size / 2.5, size / 8, size); // Solar panels (vertical part)
-             // Add a subtle glow
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = "rgba(200, 200, 255, 0.5)";
-            ctx.fillRect(x - size / 2, y - size / 8, size, size / 4);
-            ctx.fillRect(x - size / 16, y - size / 2.5, size / 8, size);
-            ctx.shadowBlur = 0; // Reset shadow
-            ctx.globalAlpha = 1.0;
-        }
-
-        function drawStarlinkDot(ctx, x, y, size, color, opacity) {
-            ctx.globalAlpha = opacity;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-
-        // --- Initialization ---
-        function initScene() {
-            stars = [];
-            starlinkTrain = [];
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            const screenArea = canvas.width * canvas.height;
-            const numStarsDynamic = Math.floor(numStarsBase + screenArea / starDensityFactor);
-            const actualNumStars = Math.min(numStarsDynamic, maxTotalStars);
-
-            for (let i = 0; i < actualNumStars; i++) {
-                const star = new Star(0,0,0,0,'rgba(255,255,255,');
-                star.reset();
-                star.opacity = Math.random() * star.baseOpacity; 
-                star.life = Math.random() * star.maxLife; 
-                if (star.opacity > 0) star.state = 'shimmering';
-                stars.push(star);
-            }
-
-            // Initialize ISS
-            iss = new MovingObject(
-                Math.random() * canvas.width, Math.random() * canvas.height,
-                (Math.random() - 0.5) * 0.2 + 0.1, // dx (0.1 to 0.3 or -0.1 to -0.3)
-                (Math.random() - 0.5) * 0.2 + 0.1, // dy
-                20, // size
-                'rgba(220, 220, 230, 0.9)', // color
-                drawISS
-            );
-
-            // Initialize Starlink Train
-            const numStarlinkDots = 25;
-            const starlinkSpeed = 0.35;
-            let trainAngle = Math.random() * Math.PI * 2;
-            let leaderDx = Math.cos(trainAngle) * starlinkSpeed;
-            let leaderDy = Math.sin(trainAngle) * starlinkSpeed;
-            let startX = Math.random() * canvas.width;
-            let startY = Math.random() * canvas.height;
-            const dotSpacing = 8; // pixels between dots
-
-            for (let i = 0; i < numStarlinkDots; i++) {
-                // Offset each dot from the leader's path start
-                let currentX = startX - i * Math.cos(trainAngle) * dotSpacing;
-                let currentY = startY - i * Math.sin(trainAngle) * dotSpacing;
-                
-                starlinkTrain.push(new MovingObject(
-                    currentX, currentY,
-                    leaderDx, leaderDy,
-                    1.2, // size of dot
-                    'rgba(180, 180, 200, 0.55)', // color of dot
-                    drawStarlinkDot,
-                    0.55 // opacity
-                ));
-            }
-        }
-
-        // --- Animation Loop ---
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            stars.forEach(star => {
-                star.update();
-                star.draw();
+        function showInstantChat(history) {
+            loginScreen.style.display = 'none'; loadingScreen.style.display = 'none'; chatContainer.style.display = 'flex'; chatInput.focus();
+            chatLog.innerHTML = '';
+            let unreadCount = 0;
+            history.forEach(item => {
+                if (item.type === 'message') { appendMessage(item.author, item.text, item.timestamp); unreadCount++; }
+                else if (item.type === 'btc_message') { appendBtcMessage(item.text, item.timestamp); unreadCount++; }
+                else if (item.type === 'id_card') { appendIdCard(item.timestamp); unreadCount++; }
+                else if (item.type === 'locked_file') { appendLockedFile(item.timestamp); unreadCount++; }
+                else if (item.type === 'easter_egg') { appendEasterEgg(item.timestamp); }
             });
+            if(unreadCount > 0) document.title = `(${unreadCount}) ${originalTitle}`;
+        }
+        
+        function runChatScript(index) {
+            if (index >= chatScript.length) return;
+            const currentItem = chatScript[index];
+            setTimeout(() => {
+                const typingIndicator = showTypingIndicator();
+                setTimeout(() => {
+                    removeTypingIndicator(typingIndicator);
+                    if (JSON.parse(localStorage.getItem('misera_chat_history')).length === 0) chatLog.innerHTML = '';
+                    const timestamp = new Date().toTimeString().split(' ')[0];
+                    let historyItem;
 
-            if (iss) {
-                iss.update();
-                iss.draw(ctx);
-            }
+                    if (currentItem.type === 'message') { appendMessage(currentItem.author, currentItem.text, timestamp); historyItem = { ...currentItem, timestamp }; }
+                    else if (currentItem.type === 'btc_message') { appendBtcMessage(currentItem.text, timestamp); historyItem = { ...currentItem, timestamp }; }
+                    else if (currentItem.type === 'id_card') { appendIdCard(timestamp); historyItem = { type: 'id_card', timestamp }; }
+                    else if (currentItem.type === 'locked_file') { appendLockedFile(timestamp); historyItem = { type: 'locked_file', timestamp }; }
 
-            starlinkTrain.forEach(dot => {
-                dot.update();
-                dot.draw(ctx);
-            });
-
-            requestAnimationFrame(animate);
+                    if (historyItem) {
+                        const history = JSON.parse(localStorage.getItem('misera_chat_history'));
+                        history.push(historyItem); localStorage.setItem('misera_chat_history', JSON.stringify(history));
+                        messageSound.play().catch(e => console.log("Audio play failed."));
+                        const unreadCount = history.length;
+                        document.title = `(${unreadCount}) ${originalTitle}`;
+                    }
+                    runChatScript(index + 1);
+                }, currentItem.typing);
+            }, currentItem.delay);
         }
 
-        window.addEventListener('resize', initScene);
+        function saveToHistory(item) {
+            const history = JSON.parse(localStorage.getItem('misera_chat_history'));
+            history.push(item);
+            localStorage.setItem('misera_chat_history', JSON.stringify(history));
+        }
 
-        initScene();
-        animate();
+        function appendMessage(author, text, timestamp) {
+            const p = document.createElement('p'); p.classList.add('message');
+            p.innerHTML = `[${timestamp}] <<span class="author-szarki">${author}</span>>: ${text}`;
+            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function appendBtcMessage(text, timestamp) {
+            const [title, address] = text.split('\n');
+            const p = document.createElement('div'); p.classList.add('message');
+            p.innerHTML = `[${timestamp}] <<span class="author-szarki">Szarki</span>>: ${title}<div class="btc-wallet">${address}</div>`;
+            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+function appendIdCard(timestamp) {
+    const div = document.createElement('div');
+    div.classList.add('message'); // Keep the container for consistency
+    const idCardHTML = `
+        <div class="digital-id-card">
+            <p>[${timestamp}] <<span class="author-szarki">Szarki</span>> uploaded a file:</p>
+            <div class="id-card-content">
+                <img src="https://szarki123.github.io/images/Szarki.png" alt="Szarki's pixelated avatar" class="id-card-pic">
+                <div class="id-card-info">
+                    <p><b>Name:</b> Szarki</p>
+                    <p><b>Date of birth:</b> 25.12.2003 (Human) ??? (Real)</p>
+                    <p><b>Age:</b> 21 (Human) ??? (Real)</p>
+                    <p><b>Occupation:</b> Medical student (doctor-dentist 4th year)</p>
+                    <p><b>Sexuality:</b> Pansexual</p>
+                    <p><b>Pronouns:</b> Fitting the biological sex of the current form</p>
+                    <p><b>Likes:</b> <span class="highlight-blue">Space</span>, Themselves, Furry, Games, Food, Roleplay</p>
+                    <p><b>Location:</b> Poland</p>
+                    <p><b>Body:</b> Shapeshifter</p>
+                    <p><b>Current form:</b> ??? (Need to ask)</p>
+                </div>
+            </div>
+        </div>
+    `;
+    div.innerHTML = idCardHTML;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+        function appendLockedFile(timestamp) {
+            const div = document.createElement('div'); div.classList.add('locked-file');
+            div.innerHTML = `[${timestamp}] <<span class="author-szarki">Szarki</span>> uploaded a file: manifest_7B3C.dat
+                             <div class="locked-file-box"><p class="access-denied">ACCESS DENIED</p><p>Your security clearance (Guest) is insufficient to view this content.</p></div>`;
+            chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function appendEasterEgg(timestamp) {
+            const div = document.createElement('div'); div.classList.add('easter-egg');
+            div.innerHTML = `[${timestamp}] <<span style="color: #E8D558;">Guest</span>>: chiken<br>
+                             <img src="https://szarki123.github.io/images/palix.png" alt="Palix easter egg" class="easter-egg-image">`;
+            chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const p = document.createElement('p'); p.textContent = '[Szarki is typing...]'; p.className = 'typing-indicator';
+            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight; return p;
+        }
+        function removeTypingIndicator(indicator) { if (indicator) indicator.remove(); }
+
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || chatInput.value.trim() === '') return;
+            event.preventDefault();
+            const text = chatInput.value.trim();
+            chatInput.value = '';
+
+            if (text.toLowerCase() === 'chiken') {
+                const timestamp = new Date().toTimeString().split(' ')[0];
+                appendEasterEgg(timestamp);
+                saveToHistory({ type: 'easter_egg', timestamp });
+            } else {
+                alert('You need a registered account to use the chat feature.');
+            }
+        });
+
     </script>
 </body>
 </html>
