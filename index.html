@@ -1,351 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misera</title>
-    <style>
-        /* General Body & Font Styles */
-        body {
-            background-color: #000;
-            color: #00FF00; /* Classic green terminal text */
-            font-family: 'Consolas', 'Courier New', Courier, monospace;
-            margin: 0;
-            overflow: hidden;
-            user-select: none;
-            cursor: default;
-            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Misera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+    /* ============================================================
+       MISERA :: guest terminal v3.1.4
+       everything below here is decoration. the site is a front.
+       ============================================================ */
+    :root{
+        --grn:      #00ff66;
+        --grn-mid:  #00b247;
+        --grn-dim:  #006b2c;
+        --blue:     #5593e0;
+        --amber:    #e8d558;
+        --red:      #ff3b3b;
+        --tomato:   #ff6347;
+        --mono:     'Share Tech Mono','Consolas','Courier New',monospace;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+        margin:0; background:#000; color:var(--grn);
+        font-family:var(--mono); font-size:16px; line-height:1.45;
+        overflow:hidden; user-select:none; cursor:default;
+        text-shadow:0 0 6px rgba(0,255,102,.28);
+        -webkit-font-smoothing:antialiased;
+    }
+    ::selection{ background:var(--grn); color:#000; }
 
-        /* --- STAGE 1: LOGIN SCREEN --- */
-        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; transition: opacity 1s ease-out; }
-        #login-screen h1 { color: #fff; font-size: 5rem; margin: 0; letter-spacing: 5px; text-shadow: 0 0 5px #fff; }
-        .login-box { margin-top: 2rem; text-align: center; }
-        .login-box input { background-color: #111; border: 1px solid #333; color: #fff; padding: 10px; margin: 5px; width: 250px; font-family: inherit; }
-        .login-box button { background-color: #1a1a1a; border: 1px solid #444; color: #ccc; padding: 10px 20px; cursor: pointer; font-family: inherit; margin-top: 1rem; transition: background-color 0.3s, color 0.3s; }
-        .login-box button:hover:not(:disabled) { background-color: #800; color: #fff; }
-        .login-box button:disabled { background-color: #111; color: #444; cursor: not-allowed; }
-        #guest-login { background-color: transparent; border: none; color: #5c5c5c; text-decoration: underline; }
-        #guest-login:hover { background-color: transparent; color: #999; }
-        #error-message { color: #a00; margin-top: 1rem; height: 20px; font-size: 0.9rem; visibility: hidden; }
+    /* ---------- CRT FX LAYERS ---------- */
+    #fx{ position:fixed; inset:0; pointer-events:none; z-index:9998; }
+    #scan{
+        position:absolute; inset:-10px 0;
+        background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.34) 2px 4px);
+    }
+    #scan::after{
+        content:''; position:absolute; left:0; right:0; height:160px;
+        background:linear-gradient(to bottom, transparent, rgba(0,255,102,.055), transparent);
+        animation:band 11s linear infinite;
+    }
+    @keyframes band{ from{ top:-20%; } to{ top:120%; } }
+    #noise{
+        position:absolute; top:0; left:0; width:100%; height:100%;
+        image-rendering:pixelated; opacity:.05;
+    }
+    #flicker{
+        position:absolute; inset:0; background:rgba(0,0,0,.07);
+        animation:flick 4.3s steps(1) infinite;
+    }
+    @keyframes flick{
+        0%,96%{opacity:0} 96.5%{opacity:.55} 97%{opacity:0}
+        98%{opacity:.3} 98.4%{opacity:0} 42%{opacity:.05}
+    }
+    #vignette{ position:absolute; inset:0; box-shadow:inset 0 0 200px 40px rgba(0,0,0,.95); }
 
-        /* --- STAGE 2: LOADING SCREEN --- */
-        #loading-screen { display: none; justify-content: center; align-items: center; height: 100vh; }
-        #loading-text { text-align: left; width: 80%; max-width: 700px; font-size: 1.1rem; line-height: 1.6; }
-        #loading-text p { margin: 2px 0; }
-        .ok { color: #00FF00; }
-        .warn { color: #E8D558; }
-        .proc { color: #5593E0; }
-        .fail { color: #a00; }
-        .data { color: #666; }
+    /* ---------- GENERIC BITS ---------- */
+    .screen{ display:none; height:100vh; width:100%; }
+    .blink{ animation:blinker 1.05s steps(1) infinite; }
+    @keyframes blinker{ 0%,49%{opacity:1} 50%,100%{opacity:0} }
+    .ok{ color:var(--grn); }
+    .warn{ color:var(--amber); }
+    .proc{ color:var(--blue); }
+    .fail{ color:var(--red); }
+    .data{ color:var(--grn-dim); }
 
-        /* --- STAGE 3: MS-DOS CHAT INTERFACE --- */
-        #chat-container { display: none; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; position: relative; }
-        #user-list-box { position: absolute; top: 10px; right: 10px; border: 2px double #00FF00; padding: 5px 10px; background-color: #000; }
-        #user-list-box h3 { margin: 0 0 5px 0; font-size: 1rem; border-bottom: 1px solid #00FF00; text-align: center; }
-        #user-list-box p { margin: 0; font-size: 1rem; }
-        #chat-log { flex-grow: 1; overflow-y: auto; font-size: 1.2rem; line-height: 1.5; padding-right: 200px; }
-        #chat-log .system-message { text-align: center; color: #888; margin-top: 20%; }
-        #chat-log .message, #chat-log .locked-file, #chat-log .easter-egg { white-space: pre-wrap; margin: 5px 0; }
-        .author-szarki { color: #FF6347; }
-        .typing-indicator { color: #888; font-style: italic; }
-        #chat-input-area { display: flex; align-items: center; margin-top: 10px; font-size: 1.2rem; }
-        #chat-input-area span { margin-right: 5px; }
-        #chat-input { background: transparent; border: none; outline: none; color: #00FF00; font-family: inherit; font-size: inherit; text-shadow: inherit; flex-grow: 1; }
-        #chat-input::-ms-clear { display: none; }
-        #chat-input:focus { caret-color: #00FF00; }
+    /* ---------- STAGE 1 :: LOGIN ---------- */
+    #login-screen{
+        display:flex; justify-content:center; align-items:center;
+        transition:opacity 1s ease-out;
+    }
+    #login-screen.closing{ opacity:0; }
+    .login-inner{ text-align:center; padding:20px; max-width:560px; }
+    .logo{
+        font-family:'VT323',var(--mono);
+        font-size:clamp(4rem,14vw,8.5rem); line-height:.85; margin:0;
+        color:#eafff2; letter-spacing:10px; position:relative;
+        text-shadow:0 0 18px rgba(0,255,102,.5);
+    }
+    .logo::before,.logo::after{
+        content:attr(data-text); position:absolute; inset:0;
+        letter-spacing:10px; overflow:hidden; pointer-events:none;
+    }
+    .logo::before{ color:var(--red); animation:gl1 6.5s infinite steps(1); }
+    .logo::after{ color:var(--blue); animation:gl2 6.5s infinite steps(1); }
+    @keyframes gl1{
+        0%,92%{ clip-path:inset(0 0 100% 0); transform:none }
+        93%{ clip-path:inset(12% 0 62% 0); transform:translate(-4px,0) }
+        95%{ clip-path:inset(58% 0 22% 0); transform:translate(4px,0) }
+        97%{ clip-path:inset(30% 0 48% 0); transform:translate(-2px,0) }
+        98%,100%{ clip-path:inset(0 0 100% 0) }
+    }
+    @keyframes gl2{
+        0%,90%{ clip-path:inset(0 0 100% 0); transform:none }
+        91%{ clip-path:inset(66% 0 12% 0); transform:translate(3px,0) }
+        94%{ clip-path:inset(24% 0 58% 0); transform:translate(-3px,0) }
+        96%{ clip-path:inset(48% 0 30% 0); transform:translate(2px,0) }
+        97%,100%{ clip-path:inset(0 0 100% 0) }
+    }
+    .tagline{ color:var(--grn-dim); letter-spacing:2px; font-size:.85rem; margin:.4rem 0 2.4rem; }
+    .login-box .field{ text-align:left; margin-bottom:.55rem; }
+    .login-box label{ display:block; color:var(--grn-dim); font-size:.78rem; letter-spacing:2px; margin-bottom:.15rem; }
+    .login-box input{
+        width:100%; background:rgba(0,255,102,.03); border:1px solid var(--grn-dim);
+        border-left:3px solid var(--grn-mid); color:#eafff2; padding:.6rem .7rem;
+        font-family:inherit; font-size:1rem; outline:none; caret-color:var(--grn);
+        transition:border-color .25s, box-shadow .25s;
+    }
+    .login-box input:focus{
+        border-color:var(--grn); box-shadow:0 0 14px rgba(0,255,102,.18); background:rgba(0,255,102,.06);
+    }
+    .login-box input::placeholder{ color:#0a4a22; }
+    #error-message{
+        color:var(--red); margin:.7rem 0 .2rem; min-height:2.2em; font-size:.82rem;
+        visibility:hidden; text-align:left; line-height:1.35;
+    }
+    #error-message.shake{ animation:shake .38s linear; }
+    @keyframes shake{
+        0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+        40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+    }
+    #login-attempt{
+        width:100%; margin-top:.6rem; padding:.7rem; cursor:pointer;
+        background:#04120a; border:1px solid var(--grn-mid); color:var(--grn);
+        font-family:inherit; font-size:1rem; letter-spacing:3px; text-transform:uppercase;
+        transition:background .2s, color .2s, box-shadow .2s;
+    }
+    #login-attempt:hover:not(:disabled){ background:var(--grn); color:#001a08; box-shadow:0 0 22px rgba(0,255,102,.35); }
+    #login-attempt:disabled{ border-color:#0d3a1d; color:#0d3a1d; cursor:not-allowed; }
+    #guest-login{
+        margin-top:1rem; background:none; border:none; cursor:pointer;
+        color:var(--grn-dim); font-family:inherit; font-size:.88rem; text-decoration:underline;
+        transition:color .2s;
+    }
+    #guest-login:hover{ color:var(--grn); }
+    .fineprint{ color:#0f3d20; font-size:.72rem; line-height:1.7; margin-top:2rem; }
 
-        /* --- DIGITAL ID CARD STYLES --- */
-/* --- DIGITAL ID CARD STYLES --- */
-.digital-id-card {
-    border: 2px double #00FF00;
-    padding: 15px;
-    margin: 15px 0;
-    background-color: #050505;
-    white-space: normal; /* THIS IS THE CRITICAL FIX */
-}
-.id-card-content {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-}
-.id-card-pic {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border: 1px solid #00FF00;
-    image-rendering: pixelated;
-}
-.id-card-info {
-    flex-grow: 1;
-}
-.id-card-info p {
-    margin: 0 0 5px 0;
-    font-size: 1rem;
-    line-height: 1.2; /* This ensures the lines inside the card are compact */
-}
-.highlight-blue {
-    color: #5593E0;
-    text-shadow: 0 0 5px rgba(85, 147, 224, 0.5);
-}
-        
-        .locked-file-box { border: 1px dashed #a00; padding: 10px; background-color: #100; }
-        .locked-file-box p { margin: 0; }
-        .access-denied { color: #a00; font-weight: bold; }
-        
-        .btc-wallet { color: #E8D558; border: 1px solid #E8D558; padding: 10px; margin-top: 5px; text-align: center; }
+    /* ---------- STAGE 2 :: HANDSHAKE ---------- */
+    #loading-screen{ justify-content:center; align-items:center; }
+    #loading-text{
+        width:min(92vw,860px); max-height:80vh; overflow:hidden;
+        font-size:.98rem; line-height:1.5;
+    }
+    #loading-text p{ margin:2px 0; white-space:pre-wrap; }
+    #load-bar{ margin-top:1.2rem; width:min(92vw,860px); }
+    #load-bar .bar{ border:1px solid var(--grn-dim); padding:2px 4px; color:var(--grn-dim); font-size:.8rem; }
+    #load-bar .fill{ display:block; height:1px; background:var(--grn); width:0%; box-shadow:0 0 8px var(--grn); transition:width .4s linear; }
+    #load-bar .pct{ display:block; text-align:right; font-size:.75rem; margin-top:2px; }
 
-        .easter-egg-image { max-width: 300px; border: 2px solid #00FF00; margin-top: 10px; }
+    /* ---------- STAGE 3 :: TERMINAL ---------- */
+    #chat-container{ flex-direction:column; height:100vh; width:100%; padding:10px 14px; position:relative; }
+    #topbar{
+        display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+        border-bottom:1px solid var(--grn-dim); padding-bottom:5px; margin-bottom:8px;
+        font-size:.82rem; letter-spacing:1px; color:var(--grn-dim); flex-wrap:wrap;
+    }
+    #topbar b{ color:var(--grn); font-weight:normal; }
+    #topbar .sep{ opacity:.4; }
 
-    </style>
+    #user-list-box{
+        position:absolute; top:46px; right:14px; width:200px;
+        border:2px double var(--grn-mid); padding:8px 10px; background:rgba(0,6,2,.88);
+        font-size:.85rem; z-index:5;
+    }
+    #user-list-box h3{
+        margin:0 0 6px; font-size:.78rem; letter-spacing:3px; text-align:center;
+        border-bottom:1px solid var(--grn-dim); padding-bottom:4px; color:var(--grn);
+    }
+    #user-list-box .u{ display:flex; justify-content:space-between; align-items:center; gap:6px; margin:3px 0; }
+    #user-list-box .who{ color:var(--tomato); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #user-list-box .who.guest{ color:var(--blue); }
+    #user-list-box .st{ font-size:.68rem; color:var(--grn-dim); white-space:nowrap; }
+    #user-list-box .cipher{
+        margin-top:7px; padding-top:5px; border-top:1px dashed var(--grn-dim);
+        font-size:.68rem; color:var(--grn-dim); text-align:center; letter-spacing:1px;
+    }
+
+    #chat-log{
+        flex:1; overflow-y:auto; font-size:1.06rem; line-height:1.5;
+        padding-right:220px; padding-bottom:6px; scrollbar-width:thin; scrollbar-color:var(--grn-dim) #000;
+    }
+    #chat-log::-webkit-scrollbar{ width:8px; }
+    #chat-log::-webkit-scrollbar-track{ background:#000; }
+    #chat-log::-webkit-scrollbar-thumb{ background:var(--grn-dim); border:1px solid #000; }
+    #chat-log .system-message{ text-align:center; color:#0f8a45; margin-top:22%; font-size:.9rem; letter-spacing:1px; }
+    #chat-log .sysline{ color:var(--grn-dim); font-size:.86rem; margin:6px 0; letter-spacing:.5px; }
+    #chat-log .sysline.err{ color:var(--red); }
+    #chat-log .divider{ text-align:center; color:var(--grn-dim); font-size:.78rem; letter-spacing:2px; margin:10px 0; }
+
+    .msg{ margin:9px 0; padding-left:9px; border-left:2px solid rgba(0,255,102,.22); white-space:pre-wrap; animation:in .22s ease-out; }
+    @keyframes in{ from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:none; } }
+    .msg .ts{ color:#0e6b34; font-size:.82rem; }
+    .msg .who{ color:var(--tomato); }
+    .msg .who.guest{ color:var(--amber); }
+    .msg em{ color:var(--grn); font-style:normal; }
+    .msg .hl{ color:var(--blue); text-shadow:0 0 6px rgba(85,147,224,.5); }
+    .msg .sys{ color:var(--grn-dim); }
+    .typing-indicator{ color:#0f8a45; font-style:italic; margin:8px 0; font-size:.95rem; }
+    .typing-indicator .dots::after{ content:''; animation:dots 1.3s steps(4) infinite; }
+    @keyframes dots{ 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+    /* ---------- DIGITAL ID CARD ---------- */
+    .digital-id-card{
+        position:relative; overflow:hidden; margin:12px 0;
+        background:linear-gradient(160deg, rgba(0,255,102,.07), rgba(0,20,8,.85) 42%);
+        border:1px solid var(--grn-mid);
+        box-shadow:0 0 30px rgba(0,255,102,.10), inset 0 0 40px rgba(0,255,102,.05);
+        white-space:normal;
+    }
+    .digital-id-card::after{
+        content:''; position:absolute; inset:0; pointer-events:none;
+        background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 3px, rgba(0,0,0,.22) 3px 5px);
+    }
+    .idcard-head{
+        display:flex; justify-content:space-between; align-items:center; gap:10px;
+        background:rgba(0,255,102,.12); border-bottom:1px solid var(--grn-mid);
+        padding:5px 12px; font-size:.74rem; letter-spacing:3px;
+    }
+    .idcard-head .sig{ color:var(--amber); letter-spacing:1px; }
+    .idcard-body{ display:flex; gap:16px; padding:14px; align-items:flex-start; }
+    .idcard-pic-wrap{ position:relative; flex:0 0 auto; }
+    .id-card-pic{
+        width:112px; height:112px; object-fit:cover; display:block;
+        border:1px solid var(--grn-mid); image-rendering:pixelated;
+        filter:grayscale(1) contrast(1.25) brightness(.95);
+    }
+    .idcard-pic-wrap::after{
+        content:''; position:absolute; inset:0; background:rgba(0,255,102,.14);
+        mix-blend-mode:screen; pointer-events:none;
+    }
+    .idcard-scanline{
+        position:absolute; left:0; right:0; height:2px; top:0;
+        background:rgba(0,255,102,.9); box-shadow:0 0 12px var(--grn);
+        animation:sweep 3.4s linear infinite; pointer-events:none;
+    }
+    @keyframes sweep{ 0%{ top:-2px; } 100%{ top:112px; } }
+    .id-card-info{ flex:1; min-width:0; font-size:.92rem; line-height:1.42; }
+    .id-card-info p{ margin:0 0 4px; }
+    .id-card-info b{ color:var(--grn-mid); font-weight:normal; display:inline-block; min-width:124px; }
+    .unknown{ color:#0f8a45; }
+    .idcard-foot{
+        display:flex; justify-content:space-between; align-items:center; gap:10px;
+        border-top:1px dashed var(--grn-dim); padding:5px 12px;
+        font-size:.68rem; color:var(--grn-dim); letter-spacing:1.5px; flex-wrap:wrap;
+    }
+    .barcode{ letter-spacing:-1px; color:var(--grn-mid); font-size:.8rem; }
+
+    .easter-egg-image{ max-width:300px; border:2px solid var(--grn); margin-top:10px; image-rendering:pixelated; }
+
+    /* ---------- INPUT + STATUS ---------- */
+    #chat-input-area{
+        display:flex; align-items:center; gap:8px; margin-top:8px;
+        font-size:1.06rem; border-top:1px solid var(--grn-dim); padding-top:8px;
+    }
+    #chat-input-area span.prompt{ color:var(--grn); }
+    #chat-input{
+        background:transparent; border:none; outline:none; color:var(--grn);
+        font-family:inherit; font-size:inherit; text-shadow:inherit;
+        flex:1; caret-color:var(--grn);
+    }
+    #chat-input::placeholder{ color:#0d4a24; }
+    #readonly-tag{ font-size:.68rem; color:var(--red); border:1px solid var(--red); padding:2px 6px; letter-spacing:1px; opacity:.8; white-space:nowrap; }
+    #statusbar{
+        display:flex; gap:14px; flex-wrap:wrap; justify-content:space-between;
+        font-size:.7rem; color:var(--grn-dim); letter-spacing:1px; margin-top:6px;
+    }
+    #statusbar .right{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    #wipe-btn{
+        background:none; border:none; padding:0; cursor:pointer; color:var(--grn-dim);
+        font-family:inherit; font-size:.7rem; letter-spacing:1px; text-decoration:underline;
+    }
+    #wipe-btn:hover{ color:var(--red); }
+
+    @media (max-width:820px){
+        #chat-log{ padding-right:0; }
+        #user-list-box{ position:static; width:auto; margin-bottom:8px; }
+        #user-list-box .u{ display:inline-flex; margin-right:14px; }
+        #user-list-box .cipher{ display:none; }
+        body{ font-size:15px; }
+        .id-card-info b{ min-width:0; }
+    }
+</style>
 </head>
 <body>
 
-    <audio id="message-sound" src="https://Szarki123.github.io/images/message.wav" preload="auto"></audio>
+<audio id="message-sound" src="https://Szarki123.github.io/images/message.wav" preload="auto"></audio>
 
-    <div id="login-screen">
-        <h1>Misera</h1>
+<!-- ================= CRT OVERLAY ================= -->
+<div id="fx">
+    <div id="scan"></div>
+    <canvas id="noise" width="160" height="100"></canvas>
+    <div id="flicker"></div>
+    <div id="vignette"></div>
+</div>
+
+<!-- ================= STAGE 1 :: LOGIN ================= -->
+<div id="login-screen" class="screen">
+    <div class="login-inner">
+        <h1 class="logo" data-text="MISERA">MISERA</h1>
+        <p class="tagline">// anonymous rendezvous node // build 3.1.4 // <span class="blink">&#9679;</span></p>
+
         <div class="login-box">
-            <input type="text" id="username" placeholder="secure_login_id"><input type="password" id="password" placeholder="authentication_key">
+            <div class="field">
+                <label>handle</label>
+                <input type="text" id="username" placeholder="secure_login_id" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>passphrase</label>
+                <input type="password" id="password" placeholder="authentication_key" autocomplete="off">
+            </div>
             <p id="error-message">Error Message Placeholder</p>
             <button id="login-attempt" disabled>Initiate Connection</button>
-            <button id="guest-login">Login as Guest</button>
+            <button id="guest-login">[ continue as guest ]</button>
+            <p class="fineprint">
+                guest sessions are read-only, ephemeral and never written to disk.<br>
+                if you are law enforcement: there's nothing here. there's also coffee in the pot.
+            </p>
         </div>
     </div>
+</div>
 
-    <div id="loading-screen">
-        <div id="loading-text"></div>
+<!-- ================= STAGE 2 :: HANDSHAKE ================= -->
+<div id="loading-screen" class="screen">
+    <div id="loading-text"></div>
+    <div id="load-bar">
+        <div class="bar"><i class="fill" id="load-fill"></i></div>
+        <span class="pct" id="load-pct">0%</span>
+    </div>
+</div>
+
+<!-- ================= STAGE 3 :: TERMINAL ================= -->
+<div id="chat-container" class="screen">
+    <div id="topbar">
+        <span><b>#/anon/0000</b> <span class="sep">//</span> ephemeral channel</span>
+        <span><b>e2e</b> <span class="sep">//</span> cipher <b>AES-256-GCM</b> <span class="sep">//</span> <span class="blink">&#9646;</span> recording: off</span>
     </div>
 
-    <div id="chat-container">
-        <div id="user-list-box">
-            <h3>ACTIVE</h3>
-            <p>> Szarki</p>
-            <p>> Guest</p>
-        </div>
-        <div id="chat-log"></div>
-        <div id="chat-input-area">
-            <span>M:\></span>
-            <input type="text" id="chat-input" autocomplete="off">
-        </div>
+    <div id="user-list-box">
+        <h3>ACTIVE NODES</h3>
+        <div class="u"><span class="who">Szarki</span><span class="st"><span class="blink">&#9679;</span> host</span></div>
+        <div class="u"><span class="who guest">Guest</span><span class="st">&#9679; read-only</span></div>
+        <div class="cipher">channel sealed <span class="blink">&#9646;</span></div>
     </div>
 
-    <script>
-        // --- BROWSER-LEVEL INTERACTIONS ---
-        window.addEventListener('beforeunload', (event) => { event.preventDefault(); event.returnValue = ''; });
-        document.addEventListener('contextmenu', event => event.preventDefault());
+    <div id="chat-log"></div>
 
-        // --- GRAB ALL THE ELEMENTS ---
-        const loginScreen = document.getElementById('login-screen'), usernameInput = document.getElementById('username'), passwordInput = document.getElementById('password'),
-              loginAttemptBtn = document.getElementById('login-attempt'), errorMessage = document.getElementById('error-message'), loadingScreen = document.getElementById('loading-screen'),
-              loadingText = document.getElementById('loading-text'), chatContainer = document.getElementById('chat-container'), chatLog = document.getElementById('chat-log'),
-              chatInput = document.getElementById('chat-input'), messageSound = document.getElementById('message-sound'), originalTitle = document.title;
-        
-        // --- AUDIO CONFIGURATION ---
-        messageSound.volume = 0.1;
+    <div id="chat-input-area">
+        <span class="prompt">M:\&gt;</span>
+        <input type="text" id="chat-input" placeholder="guest clearance: read-only. transmission disabled." autocomplete="off" spellcheck="false">
+        <span id="readonly-tag">NO WRITE ACCESS</span>
+    </div>
 
-        // --- CHAT SCRIPT DEFINITION ---
-        const chatScript = [
-            { delay: 2000, typing: 1000, author: "Szarki", text: "Oh hai", type: 'message' },
-            { delay: 2000, typing: 1500, author: "Szarki", text: "someone visited my site finally", type: 'message' },
-            { delay: 3000, typing: 2000, author: "Szarki", text: "Chat here is fully encrypted so no worries", type: 'message' },
-            { delay: 3000, typing: 1200, author: "Szarki", text: "I think I should introduce myself", type: 'message' },
-            { delay: 3000, typing: 1800, author: "Szarki", text: "uh, give me a moment...", type: 'message' },
-            { delay: 3000, typing: 1000, author: "Szarki", type: 'id_card' },
-            { delay: 1000, typing: 1000, author: "Szarki", type: 'locked_file' },
-            { delay: 10000, typing: 2500, author: "Szarki", text: "What do you think? Are you interested in Misera? I will leave you to it....", type: 'message' },
-            { delay: 4000, typing: 1500, author: "Szarki", text: `Support Misera Development (Name Your Price):\nbc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`, type: 'btc_message' }
-        ];
-
-        // --- PERSISTENCE LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const history = localStorage.getItem('misera_chat_history');
-            if (history) {
-                showInstantChat(JSON.parse(history));
-            }
-        });
-        
-        // --- LOGIN SCREEN LOGIC ---
-        function checkLoginFields() { loginAttemptBtn.disabled = !(usernameInput.value.trim() && passwordInput.value.trim()); }
-        usernameInput.addEventListener('input', checkLoginFields);
-        passwordInput.addEventListener('input', checkLoginFields);
-        loginAttemptBtn.addEventListener('click', () => {
-            loginAttemptBtn.textContent = "Authenticating..."; loginAttemptBtn.disabled = true; errorMessage.style.visibility = 'hidden';
-            setTimeout(() => {
-                errorMessage.textContent = "Connection Refused: Invalid signature hash. [EC: 0x80070005]";
-                errorMessage.style.visibility = 'visible'; loginAttemptBtn.textContent = "Initiate Connection"; checkLoginFields(); 
-            }, 2500);
-        });
-        document.getElementById('guest-login').addEventListener('click', () => {
-            loginScreen.style.opacity = '0'; setTimeout(startLoadingSequence, 1000);
-        });
-
-        // --- LOADING SEQUENCE ---
-        function startLoadingSequence() {
-            loginScreen.style.display = 'none'; loadingScreen.style.display = 'flex';
-            const fakeIP = `172.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}.${Math.floor(Math.random()*256)}`;
-            const messages = [
-                [`[INIT] Bootstrapping guest session from client ${fakeIP}...`, 1000], [`[DNS] Resolving misera.onion via Tor proxy...`, 1500], [`[ROUTE] Attempting to build circuit (3 hops)...`, 500],
-                [`[ROUTE] > Hop 1/3 to node 7A4F... <span class="ok">[OK]</span> (110ms)`, 800], [`[ROUTE] > Hop 2/3 to node B3D1... <span class="fail">[TIMEOUT]</span>`, 1200],
-                [`[ROUTE] > Rerouting... Hop 2/3 to node F9C2... <span class="ok">[OK]</span> (280ms)`, 1000], [`[ROUTE] > Hop 3/3 to exit node 4E0A... <span class="ok">[OK]</span> (450ms)`, 800],
-                [`[ROUTE] Circuit established.`, 1500], [`[AUTH] Anonymous ticket requested from host... <span class="ok">[OK]</span>`, 1000],
-                [`<span class="proc">[CRYPTO] Generating ephemeral Diffie-Hellman keys...</span>`, 1800], [`<span class="proc">[CRYPTO] Exchanging keys with host...</span>`, 1500],
-                [`<span class="proc">[CRYPTO] Server signature verified.</span>`, 800], [`<span class="proc">[CRYPTO] Handshake complete. Wrapping connection in AES-256 layer.</span>`, 1000],
-                [`[NET] Connection established.`, 500], [`<span class="warn">[WARN] SSL certificate is self-signed and expired. Trusting anyway...</span>`, 2000],
-                [`[SYNC] Receiving session manifest...`, 500]
-            ];
-            let i = 0;
-            function showMessage() { if (i < messages.length) { loadingText.innerHTML += `<p>${messages[i][0]}</p>`; setTimeout(showMessage, messages[i++][1]); } else { startDataStream(); } }
-            function startDataStream() {
-                let streamCount = 0; const streamInterval = setInterval(() => {
-                    let line = '>'; for(let j = 0; j < 30; j++) line += Math.random().toString(16).substr(2, 2).toUpperCase() + ' ';
-                    loadingText.innerHTML += `<p class="data">${line}</p>`; window.scrollTo(0, document.body.scrollHeight);
-                    if (++streamCount >= 5) { clearInterval(streamInterval); finalizeConnection(); }
-                }, 200);
-            }
-            function finalizeConnection() {
-                setTimeout(() => {
-                    loadingText.innerHTML += `<p>[SYNC] Manifest received. <span class="ok">[OK]</span></p>`;
-                    setTimeout(() => {
-                        loadingText.innerHTML += `<p>[DONE] Welcome to Misera.</p>`; localStorage.setItem('misera_chat_history', JSON.stringify([]));
-                        setTimeout(showChatAndStartScript, 1500);
-                    }, 1000);
-                }, 500);
-            }
-            showMessage();
-        }
-        
-        // --- CHAT INTERFACE LOGIC ---
-        function showChatAndStartScript() {
-            loadingScreen.style.display = 'none'; chatContainer.style.display = 'flex'; chatInput.focus();
-            chatLog.innerHTML = `<p class="system-message">-- Channel is empty. Waiting for activity --</p>`;
-            runChatScript(0); 
-        }
-
-        function showInstantChat(history) {
-            loginScreen.style.display = 'none'; loadingScreen.style.display = 'none'; chatContainer.style.display = 'flex'; chatInput.focus();
-            chatLog.innerHTML = '';
-            let unreadCount = 0;
-            history.forEach(item => {
-                if (item.type === 'message') { appendMessage(item.author, item.text, item.timestamp); unreadCount++; }
-                else if (item.type === 'btc_message') { appendBtcMessage(item.text, item.timestamp); unreadCount++; }
-                else if (item.type === 'id_card') { appendIdCard(item.timestamp); unreadCount++; }
-                else if (item.type === 'locked_file') { appendLockedFile(item.timestamp); unreadCount++; }
-                else if (item.type === 'easter_egg') { appendEasterEgg(item.timestamp); }
-            });
-            if(unreadCount > 0) document.title = `(${unreadCount}) ${originalTitle}`;
-        }
-        
-        function runChatScript(index) {
-            if (index >= chatScript.length) return;
-            const currentItem = chatScript[index];
-            setTimeout(() => {
-                const typingIndicator = showTypingIndicator();
-                setTimeout(() => {
-                    removeTypingIndicator(typingIndicator);
-                    if (JSON.parse(localStorage.getItem('misera_chat_history')).length === 0) chatLog.innerHTML = '';
-                    const timestamp = new Date().toTimeString().split(' ')[0];
-                    let historyItem;
-
-                    if (currentItem.type === 'message') { appendMessage(currentItem.author, currentItem.text, timestamp); historyItem = { ...currentItem, timestamp }; }
-                    else if (currentItem.type === 'btc_message') { appendBtcMessage(currentItem.text, timestamp); historyItem = { ...currentItem, timestamp }; }
-                    else if (currentItem.type === 'id_card') { appendIdCard(timestamp); historyItem = { type: 'id_card', timestamp }; }
-                    else if (currentItem.type === 'locked_file') { appendLockedFile(timestamp); historyItem = { type: 'locked_file', timestamp }; }
-
-                    if (historyItem) {
-                        const history = JSON.parse(localStorage.getItem('misera_chat_history'));
-                        history.push(historyItem); localStorage.setItem('misera_chat_history', JSON.stringify(history));
-                        messageSound.play().catch(e => console.log("Audio play failed."));
-                        const unreadCount = history.length;
-                        document.title = `(${unreadCount}) ${originalTitle}`;
-                    }
-                    runChatScript(index + 1);
-                }, currentItem.typing);
-            }, currentItem.delay);
-        }
-
-        function saveToHistory(item) {
-            const history = JSON.parse(localStorage.getItem('misera_chat_history'));
-            history.push(item);
-            localStorage.setItem('misera_chat_history', JSON.stringify(history));
-        }
-
-        function appendMessage(author, text, timestamp) {
-            const p = document.createElement('p'); p.classList.add('message');
-            p.innerHTML = `[${timestamp}] <<span class="author-szarki">${author}</span>>: ${text}`;
-            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight;
-        }
-
-        function appendBtcMessage(text, timestamp) {
-            const [title, address] = text.split('\n');
-            const p = document.createElement('div'); p.classList.add('message');
-            p.innerHTML = `[${timestamp}] <<span class="author-szarki">Szarki</span>>: ${title}<div class="btc-wallet">${address}</div>`;
-            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight;
-        }
-
-function appendIdCard(timestamp) {
-    const div = document.createElement('div');
-    div.classList.add('message'); // Keep the container for consistency
-    const idCardHTML = `
-        <div class="digital-id-card">
-            <p>[${timestamp}] <<span class="author-szarki">Szarki</span>> uploaded a file:</p>
-            <div class="id-card-content">
-                <img src="https://szarki123.github.io/images/Szarki.png" alt="Szarki's pixelated avatar" class="id-card-pic">
-                <div class="id-card-info">
-                    <p><b>Name:</b> Szarki</p>
-                    <p><b>Date of birth:</b> 25.12.2003 (Human) ??? (Real)</p>
-                    <p><b>Age:</b> 21 (Human) ??? (Real)</p>
-                    <p><b>Occupation:</b> Medical student (doctor-dentist 4th year)</p>
-                    <p><b>Sexuality:</b> Pansexual</p>
-                    <p><b>Pronouns:</b> Fitting the biological sex of the current form</p>
-                    <p><b>Likes:</b> <span class="highlight-blue">Space</span>, Themselves, Furry, Games, Food, Roleplay</p>
-                    <p><b>Location:</b> Poland</p>
-                    <p><b>Body:</b> Shapeshifter</p>
-                    <p><b>Current form:</b> ??? (Need to ask)</p>
-                </div>
-            </div>
+    <div id="statusbar">
+        <div class="left">
+            <span>&#9673; LINK ENCRYPTED</span><span>&#9672; EXIT 4E0A</span><span>&#9650; LAT <span id="lat">&mdash;</span>ms</span>
         </div>
-    `;
-    div.innerHTML = idCardHTML;
-    chatLog.appendChild(div);
-    chatLog.scrollTop = chatLog.scrollHeight;
+        <div class="right">
+            <span>&#9201; SESSION <span id="uptime">00:00:00</span></span>
+            <button id="wipe-btn" title="erase local session and restart">[ wipe session ]</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   MISERA :: client runtime
+   this is a simulation. there is no server. there is no network.
+   the only thing being sent anywhere is your birthday.
+   ============================================================ */
+
+/* ---------- SUBJECT DATA (drives the ID card) ---------- */
+const SZARKI = {
+    handle:     'Szarki',
+    birth:      { d: 25, m: 12, y: 2003 },   // 25/12/2003
+    occupation: 'Doctor-Dentist',
+    gender:     'Female',
+    pronouns:   'She/Her',
+    location:   'Poland',
+    body:       'Shapeshifter',
+    likes: [
+        { t: 'My boyfriend',         hl: true  },
+        { t: 'Furry',                hl: false },
+        { t: 'Games',                hl: false },
+        { t: 'Eating food',          hl: false },
+        { t: 'Roleplaying',          hl: false },
+        { t: 'Writing',              hl: false },
+        { t: 'Talking with friends', hl: false },
+        { t: 'Lewd stuff',           hl: true  }
+    ]
+};
+
+/* dynamic age: recomputed from the date every single render */
+function szarkiAge(now = new Date()){
+    let age = now.getFullYear() - SZARKI.birth.y;
+    const mNow = now.getMonth() + 1, dNow = now.getDate();
+    if (mNow < SZARKI.birth.m || (mNow === SZARKI.birth.m && dNow < SZARKI.birth.d)) age--;
+    return age;
+}
+function nextBirthdayCountdown(now = new Date()){
+    let next = new Date(now.getFullYear(), SZARKI.birth.m - 1, SZARKI.birth.d, 0, 0, 0, 0);
+    if (next <= now) next = new Date(now.getFullYear() + 1, SZARKI.birth.m - 1, SZARKI.birth.d, 0, 0, 0, 0);
+    return Math.max(0, Math.floor((next - now) / 1000));
+}
+function fmtCountdown(sec){
+    const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600),
+          m = Math.floor(sec % 3600 / 60),    s = sec % 60;
+    const p = n => String(n).padStart(2, '0');
+    return p(d) + 'd ' + p(h) + 'h ' + p(m) + 'm ' + p(s) + 's';
 }
 
-        function appendLockedFile(timestamp) {
-            const div = document.createElement('div'); div.classList.add('locked-file');
-            div.innerHTML = `[${timestamp}] <<span class="author-szarki">Szarki</span>> uploaded a file: manifest_7B3C.dat
-                             <div class="locked-file-box"><p class="access-denied">ACCESS DENIED</p><p>Your security clearance (Guest) is insufficient to view this content.</p></div>`;
-            chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+/* ---------- DOM ---------- */
+const loginScreen     = document.getElementById('login-screen'),
+      usernameInput   = document.getElementById('username'),
+      passwordInput   = document.getElementById('password'),
+      loginAttemptBtn = document.getElementById('login-attempt'),
+      errorMessage    = document.getElementById('error-message'),
+      loadingScreen   = document.getElementById('loading-screen'),
+      loadingText     = document.getElementById('loading-text'),
+      loadFill        = document.getElementById('load-fill'),
+      loadPct         = document.getElementById('load-pct'),
+      chatContainer   = document.getElementById('chat-container'),
+      chatLog         = document.getElementById('chat-log'),
+      chatInput       = document.getElementById('chat-input'),
+      messageSound    = document.getElementById('message-sound'),
+      originalTitle   = document.title;
+
+messageSound.volume = 0.10;
+
+/* ---------- AMBIENT FILM GRAIN ---------- */
+(function(){
+    const cv = document.getElementById('noise'), ctx = cv.getContext('2d');
+    const img = ctx.createImageData(cv.width, cv.height);
+    setInterval(function(){
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4){
+            const v = Math.random() * 255;
+            d[i] = d[i+1] = d[i+2] = v; d[i+3] = 255;
         }
+        ctx.putImageData(img, 0, 0);
+    }, 90);
+})();
 
-        function appendEasterEgg(timestamp) {
-            const div = document.createElement('div'); div.classList.add('easter-egg');
-            div.innerHTML = `[${timestamp}] <<span style="color: #E8D558;">Guest</span>>: chiken<br>
-                             <img src="https://szarki123.github.io/images/palix.png" alt="Palix easter egg" class="easter-egg-image">`;
-            chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+/* ---------- STATUS BAR CLOCKS ---------- */
+const sessionStart = Date.now();
+setInterval(function(){
+    const el = document.getElementById('uptime');
+    if (!el) return;
+    const s = Math.floor((Date.now() - sessionStart) / 1000);
+    el.textContent = [Math.floor(s/3600), Math.floor(s%3600/60), s%60]
+        .map(n => String(n).padStart(2,'0')).join(':');
+}, 1000);
+setInterval(function(){
+    const el = document.getElementById('lat');
+    if (el) el.textContent = (38 + Math.floor(Math.random() * 90));
+}, 2600);
+
+/* ---------- SOUND: real file, synth fallback ---------- */
+let audioCtx = null;
+function fallbackBlip(){
+    try{
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(880, t);
+        o.frequency.exponentialRampToValueAtTime(220, t + .06);
+        g.gain.setValueAtTime(0.035, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + .09);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t + .1);
+    }catch(e){ /* silence is an acceptable failure mode */ }
+}
+function playMessageSound(){
+    const p = messageSound.play();
+    if (p && p.catch) p.catch(fallbackBlip);
+}
+
+/* ---------- CHAT SCRIPT ---------- */
+const chatScript = [
+    { delay: 2000, typing: 900,  type:'message', text:'oh hai' },
+    { delay: 2200, typing: 1900, type:'message', text:'you actually came. i had my money on nobody ever finding this little corner of the internet.' },
+    { delay: 2400, typing: 2900, type:'message', text:"don't stress about the url though. this channel is end-to-end encrypted, nothing is logged, no ip, no timestamps, no record that you were ever here. you were never here." },
+    { delay: 2600, typing: 2300, type:'message', text:'i have been sitting in this channel for an embarrassing amount of time waiting for literally anything to happen, so. hi. hello. welcome, i guess.' },
+    { delay: 2400, typing: 1300, type:'message', text:'anyway, i should probably introduce myself before you get bored and the circuit drops.' },
+    { delay: 2600, typing: 1600, type:'message', text:'uh. give me a second, digging up my file...' },
+    { delay: 1400, typing: 1400, type:'idcard' },
+    { delay: 3000, typing: 1900, type:'message', text:"that's me. or the version of me i'm comfortable handing to a stranger." },
+    { delay: 3000, typing: 2300, type:'message', text:'<em>Current form</em> is still classified, for the record. you do not get that one for free. that information requires trust, and trust takes a while with me.' },
+    { delay: 3200, typing: 2600, type:'message', text:'dentist by day, which is a deeply uncool thing to say on a darknet, but there it is. i stare at teeth all day and then come home and run fake horror servers for fun.' },
+    { delay: 3400, typing: 3200, type:'message', text:'i write. i roleplay until 4am. i play games for eight hours and then deny that it happened. i talk to my friends far too much. and my boyfriend has basically full custody of my free time, which is fair.' },
+    { delay: 3000, typing: 2500, type:'message', text:'i also have a frankly irresponsible amount of <em>lewd stuff</em> that i probably should not be listing on a public index. consider this your one written warning.' },
+    { delay: 3200, typing: 1900, type:'message', text:'so yeah. that is the whole pitch. not a lot, i know.' },
+    { delay: 4400, typing: 2600, type:'message', text:'so... what did you think?' },
+    { delay: 4400, typing: 900,  type:'message', text:'hello?' },
+    { delay: 2600, typing: 1300, type:'message', text:'are you there??' }
+];
+
+/* ---------- PERSISTENCE ---------- */
+const HKEY = 'misera_chat_history', UKEY = 'misera_unread';
+const getHistory = function(){ try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch(e){ return []; } };
+const setHistory = function(h){ localStorage.setItem(HKEY, JSON.stringify(h)); };
+
+document.addEventListener('DOMContentLoaded', function(){
+    if (getHistory().length) showInstantChat();
+});
+
+/* ---------- LOGIN SCREEN ---------- */
+function checkLoginFields(){ loginAttemptBtn.disabled = !(usernameInput.value.trim() && passwordInput.value.trim()); }
+usernameInput.addEventListener('input', checkLoginFields);
+passwordInput.addEventListener('input', checkLoginFields);
+
+const AUTH_ERRORS = [
+    'CONNECTION REFUSED :: signature hash mismatch. [EC: 0x80070005]',
+    'ACCESS DENIED :: this handle is not on the guest roster. [EC: 0x8007000E]',
+    'TIMEOUT :: the host did not answer. it may not be listening. [EC: 0x800700B7]',
+    'TRACE ROUTE ABORTED :: 3 hops, no exit. the circuit is cold. [EC: 0x80070005]'
+];
+function tryLogin(){
+    loginAttemptBtn.textContent = 'Authenticating...';
+    loginAttemptBtn.disabled = true;
+    errorMessage.style.visibility = 'hidden';
+    setTimeout(function(){
+        errorMessage.textContent = AUTH_ERRORS[Math.floor(Math.random() * AUTH_ERRORS.length)];
+        errorMessage.style.visibility = 'visible';
+        errorMessage.classList.remove('shake'); void errorMessage.offsetWidth; errorMessage.classList.add('shake');
+        loginAttemptBtn.textContent = 'Initiate Connection';
+        checkLoginFields();
+        passwordInput.value = '';
+    }, 2600);
+}
+loginAttemptBtn.addEventListener('click', tryLogin);
+usernameInput.addEventListener('keydown', function(e){ if (e.key === 'Enter' && !loginAttemptBtn.disabled) tryLogin(); });
+passwordInput.addEventListener('keydown', function(e){ if (e.key === 'Enter' && !loginAttemptBtn.disabled) tryLogin(); });
+
+document.getElementById('guest-login').addEventListener('click', function(){
+    loginScreen.classList.add('closing');
+    setTimeout(startLoadingSequence, 1000);
+});
+
+/* ---------- HANDSHAKE SEQUENCE ---------- */
+function startLoadingSequence(){
+    loginScreen.style.display = 'none';
+    loadingScreen.style.display = 'flex';
+
+    const fakeIP = '172.' + Math.floor(Math.random()*256) + '.' + Math.floor(Math.random()*256) + '.' + Math.floor(Math.random()*256);
+    const fp = (Math.random().toString(16).slice(2,10) + Math.random().toString(16).slice(2,10)).toUpperCase();
+    const rtt = 40 + Math.floor(Math.random()*80);
+
+    const lines = [
+        ['[INIT] Bootstrapping guest session from client ' + fakeIP + '...', 1000],
+        ['[INIT] Mounting ephemeral overlay (tmpfs, noatime) ... <span class="ok">[OK]</span>', 700],
+        ['[DNS] Resolving misera.<b>onion</b> via SOCKS5 proxy 127.0.0.1:9050...', 1500],
+        ['[ROUTE] Attempting to build circuit (3 hops)...', 600],
+        ['[ROUTE] &gt; Hop 1/3 to node 7A4F... <span class="ok">[OK]</span> (110ms)', 900],
+        ['[ROUTE] &gt; Hop 2/3 to node B3D1... <span class="fail">[TIMEOUT]</span>', 1200],
+        ['[ROUTE] &gt; Rerouting... Hop 2/3 to node F9C2... <span class="ok">[OK]</span> (280ms)', 1100],
+        ['[ROUTE] &gt; Hop 3/3 to exit node 4E0A... <span class="ok">[OK]</span> (450ms)', 900],
+        ['[ROUTE] Circuit established. Fingerprint <span class="data">' + fp + '</span>', 1400],
+        ['[AUTH] Requesting anonymous zymoticket from host... <span class="ok">[OK]</span>', 1000],
+        ['<span class="proc">[CRYPTO] Generating ephemeral Curve25519 keypair...</span>', 1500],
+        ['<span class="proc">[CRYPTO] Exchanging keys with host (X25519)...</span>', 1300],
+        ['<span class="proc">[CRYPTO] Verifying host signature against pinned onion address...</span>', 1500],
+        ['<span class="proc">[CRYPTO] Handshake complete. Wrapping session in AES-256-GCM.</span>', 1100],
+        ['[NET] Connection established. RTT ' + rtt + 'ms.', 500],
+        ['<span class="warn">[WARN] Leaf certificate is self-signed and expired (199 days).</span>', 1800],
+        ['<span class="warn">[WARN] Trusting it anyway. It is a darknet. That is the point.</span>', 1800],
+        ['<span class="fail">[WARN] Clipboard monitoring active. Do not paste credentials.</span>', 1500],
+        ['[SYNC] Requesting channel manifest...', 700]
+    ];
+
+    let i = 0;
+    const totalSteps = lines.length + 8;
+
+    function progress(){
+        const pct = Math.min(99, Math.round((i / totalSteps) * 100));
+        loadFill.style.width = pct + '%';
+        loadPct.textContent = pct + '%';
+    }
+    function push(html, cls){
+        const p = document.createElement('p');
+        if (cls) p.className = cls;
+        p.innerHTML = html;
+        loadingText.appendChild(p);
+        progress();
+    }
+    function next(){
+        if (i < lines.length){
+            const pair = lines[i++];
+            push(pair[0]);
+            setTimeout(next, pair[1]);
+        } else {
+            startDataStream();
         }
+    }
+    function startDataStream(){
+        let rows = 0;
+        const iv = setInterval(function(){
+            let line = '>';
+            for (let j = 0; j < 26; j++) line += Math.random().toString(16).slice(2, 6).toUpperCase() + ' ';
+            push(line, 'data');
+            if (++rows >= 5){ clearInterval(iv); finalize(); }
+        }, 210);
+    }
+    function finalize(){
+        push('[SYNC] Manifest received. Session key negotiated. <span class="ok">[OK]</span>');
+        setTimeout(function(){
+            push('[SYNC] Channel roster: 2 nodes (1 host, 1 guest). No other participants present.');
+            push('[DONE] Welcome to Misera. Guest clearance: <span class="warn">READ-ONLY</span>.');
+            loadFill.style.width = '100%';
+            loadPct.textContent = '100%';
+            setTimeout(showChatAndStartScript, 1600);
+        }, 1000);
+    }
 
-        function showTypingIndicator() {
-            const p = document.createElement('p'); p.textContent = '[Szarki is typing...]'; p.className = 'typing-indicator';
-            chatLog.appendChild(p); chatLog.scrollTop = chatLog.scrollHeight; return p;
-        }
-        function removeTypingIndicator(indicator) { if (indicator) indicator.remove(); }
+    next();
+}
 
-        chatInput.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter' || chatInput.value.trim() === '') return;
-            event.preventDefault();
-            const text = chatInput.value.trim();
-            chatInput.value = '';
+/* ---------- CHAT VIEW ---------- */
+function showChatAndStartScript(){
+    loadingScreen.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    chatInput.focus();
+    chatLog.innerHTML = '<p class="system-message">-- channel is empty. waiting for activity --</p>';
+    setHistory([]);
+    localStorage.setItem(UKEY, '0');
+    document.title = originalTitle;
+    runChatScript(0);
+}
 
-            if (text.toLowerCase() === 'chiken') {
-                const timestamp = new Date().toTimeString().split(' ')[0];
-                appendEasterEgg(timestamp);
-                saveToHistory({ type: 'easter_egg', timestamp });
-            } else {
-                alert('You need a registered account to use the chat feature.');
+function showInstantChat(){
+    loginScreen.style.display = 'none';
+    loadingScreen.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    chatInput.blur();
+    chatLog.innerHTML = '';
+
+    const history = getHistory();
+    history.forEach(function(item){
+        if (item.type === 'message')        appendMessage(item.author, item.text, item.timestamp);
+        else if (item.type === 'idcard')    appendIdCard(item.timestamp);
+        else if (item.type === 'easter-egg') appendEasterEgg(item.timestamp);
+    });
+
+    if (!history.length){
+        chatLog.innerHTML = '<p class="system-message">-- channel is empty. waiting for activity --</p>';
+        return;
+    }
+    const unread = history.filter(function(h){ return h.type === 'message' || h.type === 'idcard'; }).length;
+    document.title = '(' + unread + ') ' + originalTitle;
+}
+
+function bumpUnread(){
+    const n = parseInt(localStorage.getItem(UKEY) || '0', 10) + 1;
+    localStorage.setItem(UKEY, String(n));
+    document.title = '(' + n + ') ' + originalTitle;
+}
+
+/* ---------- SCRIPT RUNNER ---------- */
+function runChatScript(index){
+    if (index >= chatScript.length){ ghostTyping(3); return; }
+    const item = chatScript[index];
+
+    setTimeout(function(){
+        const indicator = showTypingIndicator();
+        setTimeout(function(){
+            removeTypingIndicator(indicator);
+            if (!chatLog.querySelector('.msg')) chatLog.innerHTML = '';
+
+            const timestamp = stamp();
+            let entry = null;
+
+            if (item.type === 'message'){
+                appendMessage(SZARKI.handle, item.text, timestamp);
+                entry = { type:'message', author:SZARKI.handle, text:item.text, timestamp:timestamp };
+            } else if (item.type === 'idcard'){
+                appendIdCard(timestamp);
+                entry = { type:'idcard', timestamp:timestamp };
             }
-        });
 
-    </script>
+            if (entry){
+                const h = getHistory(); h.push(entry); setHistory(h);
+                playMessageSound(); bumpUnread();
+            }
+            runChatScript(index + 1);
+        }, item.typing);
+    }, item.delay);
+}
+
+/* she keeps typing. nothing ever arrives. that is the whole point. */
+function ghostTyping(times){
+    let n = 0;
+    setTimeout(function cycle(){
+        if (n >= times) return;
+        const ind = showTypingIndicator();
+        setTimeout(function(){
+            removeTypingIndicator(ind);
+            n++;
+            setTimeout(cycle, 4200);
+        }, 2600);
+    }, 5000);
+}
+
+/* ---------- RENDERERS ---------- */
+function stamp(){
+    const d = new Date();
+    return [d.getHours(), d.getMinutes(), d.getSeconds()]
+        .map(function(n){ return String(n).padStart(2,'0'); }).join(':');
+}
+function escapeHTML(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function scrollDown(){ chatLog.scrollTop = chatLog.scrollHeight; }
+
+function appendMessage(author, text, timestamp){
+    const p = document.createElement('div');
+    p.classList.add('msg');
+    const isGuest = author && author.toLowerCase() === 'guest';
+    /* only <em> survives escaping, everything else stays literal */
+    const safe = escapeHTML(text)
+        .replace(/&lt;em&gt;/g, '<em>')
+        .replace(/&lt;\/em&gt;/g, '</em>');
+    p.innerHTML = '<span class="ts">[' + timestamp + ']</span> &lt;&lt;<span class="who' +
+        (isGuest ? ' guest' : '') + '">' + author + '</span>&gt;&gt; ' + safe;
+    chatLog.appendChild(p);
+    scrollDown();
+}
+
+function appendSystemLine(text, isError){
+    const p = document.createElement('p');
+    p.className = 'sysline' + (isError ? ' err' : '');
+    p.textContent = text;
+    chatLog.appendChild(p);
+    scrollDown();
+}
+
+function appendIdCard(timestamp){
+    const age = szarkiAge();
+    const likesHTML = SZARKI.likes
+        .map(function(l){ return l.hl ? '<span class="hl">' + l.t + '</span>' : l.t; })
+        .join(', ');
+
+    const wrap = document.createElement('div');
+    wrap.classList.add('msg');
+    wrap.innerHTML =
+        '<span class="ts">[' + timestamp + ']</span> &lt;&lt;<span class="who">' + SZARKI.handle +
+        '</span>&gt;&gt; <span class="sys">transmits attachment: subject_profile.sig</span>' +
+        '<div class="digital-id-card">' +
+            '<div class="idcard-head">' +
+                '<span>&#9672; SUBJECT PROFILE</span>' +
+                '<span class="sig">SIG-7B3C-AE21 &middot; DOB-VERIFIED</span>' +
+            '</div>' +
+            '<div class="idcard-body">' +
+                '<div class="idcard-pic-wrap">' +
+                    '<img src="https://szarki123.github.io/images/Szarki.png" alt="Szarki" class="id-card-pic">' +
+                    '<i class="idcard-scanline"></i>' +
+                '</div>' +
+                '<div class="id-card-info">' +
+                    '<p><b>Name:</b> ' + SZARKI.handle + '</p>' +
+                    '<p><b>Date of birth:</b> 25.12.2003 (Human) <span class="unknown">???</span> (Real)</p>' +
+                    '<p><b>Age:</b> ' + age + ' (Human) <span class="unknown">???</span> (Real)</p>' +
+                    '<p><b>Occupation:</b> ' + SZARKI.occupation + '</p>' +
+                    '<p><b>Gender / Sexuality:</b> ' + SZARKI.gender + '</p>' +
+                    '<p><b>Pronouns:</b> ' + SZARKI.pronouns + '</p>' +
+                    '<p><b>Likes:</b> ' + likesHTML + '</p>' +
+                    '<p><b>Location:</b> ' + SZARKI.location + '</p>' +
+                    '<p><b>Body:</b> ' + SZARKI.body + '</p>' +
+                    '<p><b>Current form:</b> <span class="unknown">??? (need to earn it)</span></p>' +
+                    '<p><b>Clearance:</b> <span class="unknown">GUEST / READ-ONLY</span></p>' +
+                '</div>' +
+            '</div>' +
+            '<div class="idcard-foot">' +
+                '<span>&#9679; VERIFIED BY OPERATOR</span>' +
+                '<span id="birthday-tick">NEXT CYCLE IN ' + fmtCountdown(nextBirthdayCountdown()) + '</span>' +
+                '<span class="barcode">|||| ||||&#9617;||| ||||||</span>' +
+            '</div>' +
+        '</div>';
+    chatLog.appendChild(wrap);
+    scrollDown();
+    startBirthdayTick();
+}
+
+let birthdayTimer = null;
+function startBirthdayTick(){
+    if (birthdayTimer) clearInterval(birthdayTimer);
+    birthdayTimer = setInterval(function(){
+        const el = document.getElementById('birthday-tick');
+        if (!el) return clearInterval(birthdayTimer);
+        el.textContent = 'NEXT CYCLE IN ' + fmtCountdown(nextBirthdayCountdown());
+    }, 1000);
+}
+
+function appendEasterEgg(timestamp){
+    const div = document.createElement('div');
+    div.classList.add('msg');
+    div.innerHTML = '<span class="ts">[' + timestamp + ']</span> &lt;&lt;<span class="who guest">Guest</span>&gt;&gt; chiken' +
+                    '<br><img src="https://szarki123.github.io/images/palix.png" alt="palix" class="easter-egg-image">';
+    chatLog.appendChild(div);
+    scrollDown();
+}
+
+function showTypingIndicator(){
+    const p = document.createElement('p');
+    p.className = 'typing-indicator';
+    p.innerHTML = '&lt;&lt;' + SZARKI.handle + ' is typing<span class="dots"></span>';
+    chatLog.appendChild(p);
+    scrollDown();
+    return p;
+}
+function removeTypingIndicator(el){ if (el) el.remove(); }
+
+/* ---------- GUEST INPUT: read-only, obviously ---------- */
+const DENIALS = [
+    'ERR_GUEST :: write access denied. your session token carries read-only clearance.',
+    'ERR_GUEST :: transmission rejected by host policy (RFC-LEAK-0001).',
+    'ERR_GUEST :: this handle is a spectator. spectating is free. talking is not.',
+    'ERR_GUEST :: message discarded. nothing was sent. nothing ever is.'
+];
+chatInput.addEventListener('keydown', function(event){
+    if (event.key !== 'Enter' || !chatInput.value.trim()) return;
+    event.preventDefault();
+    const text = chatInput.value.trim();
+    chatInput.value = '';
+
+    if (text.toLowerCase() === 'chiken'){
+        const timestamp = stamp();
+        appendEasterEgg(timestamp);
+        const h = getHistory();
+        h.push({ type:'easter-egg', timestamp:timestamp });
+        setHistory(h);
+        playMessageSound();
+        return;
+    }
+    appendSystemLine('[' + stamp() + '] ' + DENIALS[Math.floor(Math.random()*DENIALS.length)], true);
+    chatInput.focus();
+});
+
+/* ---------- SESSION WIPE ---------- */
+document.getElementById('wipe-btn').addEventListener('click', function(){
+    localStorage.removeItem(HKEY);
+    localStorage.removeItem(UKEY);
+    location.reload();
+});
+
+/* ---------- WINDOW-LEVEL PARANOIA ---------- */
+window.addEventListener('beforeunload', function(e){ e.preventDefault(); e.returnValue = ''; });
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+</script>
 </body>
 </html>
